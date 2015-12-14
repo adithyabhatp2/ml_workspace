@@ -1,10 +1,10 @@
 Proposal :
 
 We are planning to apply a set of learning algorithms. The current list of algorithms that we are planning to evaluate include the following.
-• A Naive-Bayesian Learner
-• A Decision Tree
-• A Bayes Net
-• A Neural Network
+â€¢ A Naive-Bayesian Learner
+â€¢ A Decision Tree
+â€¢ A Bayes Net
+â€¢ A Neural Network
 We will expand this list, time permitting. 
 On top of this list, we intend to perform feature selection.
 Finally, we will attempt to create ensembles to improve predictive accuracy.
@@ -32,4 +32,22 @@ Evaluation
 
 
 for each learner, we should call scripts multiple times with appropriately added / removed features, etc.
+
+Edit :
+NB - Done
+DT - Haven't looked at removing NA. Thinking of manually cleaning the file and giving it as input.
+SVM - Done
+
+I am not sure what you mean by Feature Engineering.
+
+What I plan to do tomorrow (Monday) evening.
+
+Feature Selection :
+There are a couple of ways to do feature selection in Scikit-Learn.
+1. For SVM, we can use L1-based FS (basically adjusting parameter C)
+2. For DT, apparently there is a tree-based FS which will give out the "feature importance" (I'm guessing a relative measure) and we could use this to discard these features.
+
+Also, the implementations of NB, SVM already normalize the features to values between 0 and 1
+
+And yes, there is a function (a similar function to PR) that gives TPR, FPR and thresholds for ROC.
 
