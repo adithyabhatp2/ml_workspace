@@ -17,37 +17,31 @@ Finally, we will attempt to create ensembles to improve predictive accuracy.
 Discussion :
 
 Base Learners -
-	NB - done?
+	NB - done. normalized internally.
+	SVM - done. normalized internally.
 	Decision Tree - works in R, does it work in python too?
 	NN - atleast 1 NN works in R .. reduce training set size, or use more powerful machine
 	Bayes Net - ?
-	Neural Network / SVM - ?
+	Neural Network - ?
 	Ensemble - to do
+		- http://scikit-learn.org/stable/modules/generated/sklearn.ensemble.AdaBoostClassifier.html
 Feature Engineering  - sort of done
-Feature Selection - do separately ? 
-	Normalization of features?
+Feature Selection - 
+	There are a couple of ways to do feature selection in Scikit-Learn.
+	1. For SVM, we can use L1-based FS (basically adjusting parameter C)
+	2. For DT, apparently there is a tree-based FS which will give out the "feature importance" (I'm guessing a relative measure) and we could use this to discard these features.
+
 Evaluation
 	PR	- does the function we found take any data frame in appropriate format?
-	ROC - is there a similar function?
+	ROC - there is a similar fn that gives TPR, FPR and thresholds for ROC.
 
 
 for each learner, we should call scripts multiple times with appropriately added / removed features, etc.
 
-Edit :
-NB - Done
 DT - Haven't looked at removing NA. Thinking of manually cleaning the file and giving it as input.
-SVM - Done
-
-I am not sure what you mean by Feature Engineering.
 
 What I plan to do tomorrow (Monday) evening.
 
-Feature Selection :
-There are a couple of ways to do feature selection in Scikit-Learn.
-1. For SVM, we can use L1-based FS (basically adjusting parameter C)
-2. For DT, apparently there is a tree-based FS which will give out the "feature importance" (I'm guessing a relative measure) and we could use this to discard these features.
 
-Also, the implementations of NB, SVM already normalize the features to values between 0 and 1
 
-And yes, there is a function (a similar function to PR) that gives TPR, FPR and thresholds for ROC.
 
