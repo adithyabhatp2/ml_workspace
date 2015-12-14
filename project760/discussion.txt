@@ -1,0 +1,35 @@
+Proposal :
+
+We are planning to apply a set of learning algorithms. The current list of algorithms that we are planning to evaluate include the following.
+• A Naive-Bayesian Learner
+• A Decision Tree
+• A Bayes Net
+• A Neural Network
+We will expand this list, time permitting. 
+On top of this list, we intend to perform feature selection.
+Finally, we will attempt to create ensembles to improve predictive accuracy.
+
+3 Comparison and Evaluation
+1. Plot PR and/or RoC curves for each of the models obtained above.
+2. We are also interested in evaluating the models represented by the neural net and the Bayes net and examining correlations between the two.
+3. We will evaluate our feature selection and ensembles relative to the baselines established in step 1.
+
+Discussion :
+
+Base Learners -
+	NB - done?
+	Decision Tree - works in R, does it work in python too?
+	NN - atleast 1 NN works in R .. reduce training set size, or use more powerful machine
+	Bayes Net - ?
+	Neural Network / SVM - ?
+	Ensemble - to do
+Feature Engineering  - sort of done
+Feature Selection - do separately ? 
+	Normalization of features?
+Evaluation
+	PR	- does the function we found take any data frame in appropriate format?
+	ROC - is there a similar function?
+
+
+for each learner, we should call scripts multiple times with appropriately added / removed features, etc.
+
