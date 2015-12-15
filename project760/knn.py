@@ -14,100 +14,81 @@ data_dir = './input/'	# needs trailing slash
 train_file = data_dir + 'census.data.v3.csv'
 test_file = data_dir + 'census.test.v3.csv'
 
-###
-
 train = pd.read_csv( train_file )
 test = pd.read_csv( test_file )
 
-# print train['instance weight'].values
+# y
+y_train = train.Label
+y_test = test.Label
+
+# populate lists of numeric and cat attributes
 
 all_cols = list(train.columns.values)
-# numeric x
 numeric_cols = ['age','wage per hour','capital gains','capital losses','dividends from stocks','num persons worked for employer','weeks worked in year',]
-
 remove_cols = ['Label','instance weight','migration code-change in msa','migration code-change in reg','migration code-move within reg','migration prev res in sunbelt']
-#l3 = [x for x in l1 if x not in l2]
 cat_cols =  [x for x in all_cols if x not in numeric_cols and x not in remove_cols]
 
-
-
-
+# handle numerical features
 x_num_train = train[ numeric_cols ].as_matrix()
 x_num_test = test[ numeric_cols ].as_matrix()
 
+x_train_count = x_num_train.shape[0]
+x_test_count = x_num_test.shape[0]
 
-# scale to <0,1>
+x_num_combined = np.concatenate((x_num_train,x_num_test), axis=0) # 0 -row 1 - col
 
-max_train = np.amax( x_num_train, 0 )
-max_test = np.amax( x_num_test, 0 )		# not really needed
+print "\nTRAIN NUM dims: ", x_num_train.shape, ", num rows: ", x_train_count
+print "TEST NUM dims: ", x_num_test.shape, ", num rows: ", x_test_count
+print "COMBINED NUM dims: ", x_num_combined.shape	
 
-x_num_train = np.true_divide(x_num_train, max_train)
-x_num_test = np.true_divide(x_num_test, max_train)		# scale test by max_train
+# scale numeric features to <0,1>
+max_num = np.amax( x_num_combined, 0 )
 
+x_num_combined = np.true_divide(x_num_combined, max_num) # scale by max. truedivide needed for decimals
+x_num_train = x_num_combined[0:x_train_count]
+x_num_test = x_num_combined[x_train_count:]
 
-# y
-
-y_train = train.Label
-# print y_train
-y_test = test.Label
+print "\nTRAIN NUM dims: ", x_num_train.shape, ", expected num rows: ", x_train_count
+print "TEST NUM dims: ", x_num_test.shape, ", expected num rows: ", x_test_count
 
 # categorical
 
-cat_train = train.drop( numeric_cols + ['Label','instance weight','migration code-change in msa','migration code-change in reg','migration code-move within reg','migration prev res in sunbelt'], axis = 1 )
-cat_test = test.drop( numeric_cols + ['Label','instance weight','migration code-change in msa','migration code-change in reg','migration code-move within reg','migration prev res in sunbelt'], axis = 1 )
+x_cat_train = train.drop( numeric_cols + remove_cols, axis = 1 )
+x_cat_test = test.drop( numeric_cols + remove_cols, axis = 1 )
 
-cat_train.fillna( 'NA', inplace = True )
-cat_test.fillna( 'NA', inplace = True )
+x_cat_train.fillna( 'NA', inplace = True )
+x_cat_test.fillna( 'NA', inplace = True )
+
+x_cat_combined = pd.concat((x_cat_train, x_cat_test), axis=0)
+
+print "\nTRAIN CAT dims: ", x_cat_train.shape, ", num rows: ", x_train_count
+print "TEST CAT dims: ", x_cat_test.shape, ", num rows: ", x_test_count
+print "COMBINED CAT dims: ", x_cat_combined.shape	
+
+print "\nTYPES\nx_cat_train: ", type(x_cat_train)
+print "x_cat_combined: ", type(x_cat_combined)
+
+# one-of-k handling for categorical features
+# pandas.get_dummies(data, prefix=None, prefix_sep='_', dummy_na=False, columns=None, sparse=False)
+vec_x_cat_combined = pd.get_dummies(x_cat_combined, columns=cat_cols, sparse=False)#.as_matrix()
+
+vec_x_cat_train = vec_x_cat_combined[0:x_train_count]
+vec_x_cat_test = vec_x_cat_combined[x_train_count:]
+
+print "\nExpanded TRAIN CAT dims: ", vec_x_cat_train.shape, ", expected num rows: ", x_train_count
+print "Expanded TEST CAT dims: ", vec_x_cat_test.shape, ", expected num rows: ", x_test_count
 
 
-#   pandas.get_dummies(data, prefix=None, prefix_sep='_', dummy_na=False, columns=None, sparse=False)
-vec_x_cat_train = pd.get_dummies(cat_train, columns=cat_cols)
-vec_x_cat_test = pd.get_dummies(cat_test, columns=cat_cols)
-
-
-"""
-x_cat_train = cat_train.T.to_dict().values()
-x_cat_test = cat_test.T.to_dict().values()
-
-
-# vectorize
-
-vectorizer = DV( sparse = False )
-vec_x_cat_train = vectorizer.fit_transform( x_cat_train )
-vec_x_cat_test = vectorizer.transform( x_cat_test )
-
-"""
-
-# complete 
+# combine numerical and categorical
 
 x_train = np.hstack(( x_num_train, vec_x_cat_train )) # returns ndarray
 x_test = np.hstack(( x_num_test, vec_x_cat_test ))
 
+print "\nx_train: ", x_train.shape, ", ", type(x_train)
+print "x_test: ", x_test.shape, ", ", type(x_test)
 
-
-"""
-print("\n\nX_TRAIN : ")
-print(x_train)
-
-
-print("ONE ROW");
-print(x_train[0])
-print(x_train[1])
-print(x_train[2])
-
-
-print("Num")
-print(x_num_train)
-print("Cat")
-print(x_cat_train)
-print()
-print("x_train")
-print(x_train)
-print("x_test")
-print(x_test)
-"""
-
-
+# working fine upto here - Data Processing
+# below - classifier specific logic
 
 print("Doing knn")
 
