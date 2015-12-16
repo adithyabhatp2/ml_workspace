@@ -4,15 +4,15 @@ from sklearn.feature_extraction import DictVectorizer as DV
 from sklearn import svm
 from sklearn import metrics
 from sklearn import neighbors, datasets
-from sklearn.metrics import precision_recall_curve
+from sklearn.metrics import precision_recall_fscore_support
 import matplotlib.pyplot as plt
 
 
 data_dir = './input/'	# needs trailing slash
 
 # validation split, both files with headers and the Happy column
-train_file = data_dir + 'census.data.v3.csv'
-test_file = data_dir + 'census.test.v3.csv'
+train_file = data_dir + 'census.data.v5.csv'
+test_file = data_dir + 'census.test.v5.csv'
 
 train = pd.read_csv( train_file )
 test = pd.read_csv( test_file )
@@ -25,7 +25,7 @@ y_test = test.Label
 
 all_cols = list(train.columns.values)
 numeric_cols = ['age','wage per hour','capital gains','capital losses','dividends from stocks','num persons worked for employer','weeks worked in year',]
-remove_cols = ['Label','instance weight','migration code-change in msa','migration code-change in reg','migration code-move within reg','migration prev res in sunbelt']
+remove_cols = ['Label','instance weight']
 cat_cols =  [x for x in all_cols if x not in numeric_cols and x not in remove_cols]
 
 # handle numerical features
@@ -94,15 +94,100 @@ print("Doing knn")
 
 n_neighbors = 1
 
+y_test_num=[]
+print "Before for reset"
+print len(y_test)
+print type(y_test)
+y_test = y_test.as_matrix()
+# print y_test
+for i in range(len(y_test)):
+	# print y_test[i]
+	# print i
+	if y_test[i] == 'Pos':
+		y_test_num.append(1)
+	else:
+		y_test_num.append(0)
+expected = y_test
+
+pos_precision_weighted=[]
+pos_precision_uniform=[]
+pos_recall_weighted=[]
+pos_recall_uniform=[]
+
+neg_precision_weighted=[]
+neg_precision_uniform=[]
+neg_recall_weighted=[]
+neg_recall_uniform=[]
+
+print x_train.size
+print y_train.size
+
 for weights in ['distance', 'uniform']:
 	print(weights)
 	for n_neighbors in [1, 2, 3]:
 		print("Num neighbors: ")
 		print(n_neighbors)	
 		knn_classifier = neighbors.KNeighborsClassifier(n_neighbors, weights=weights)
+		print 
 		knn_classifier.fit(x_train, y_train)
 		predicted = knn_classifier.predict(x_test)
-		expected = y_test
+		print "Fit done"
+		precision, recall, fscore, support = precision_recall_fscore_support(expected, predicted)
+		print precision
+		print recall
 		print(metrics.classification_report(expected, predicted))
+		if weights=='distance':
+			pos_precision_weighted.append(precision[1])
+			pos_recall_weighted.append(recall[1])
+			neg_precision_weighted.append(precision[0])
+			neg_recall_weighted.append(recall[0])
+		else:
+			pos_precision_uniform.append(precision[1])
+			pos_recall_uniform.append(recall[1])
+			neg_precision_uniform.append(precision[0])
+			neg_recall_uniform.append(recall[0])
+
+for p,r in zip(neg_precision_uniform, neg_recall_uniform):
+	# print p
+	# print r
+	plt.scatter(r,p)
+	plt.axis([0,1,0,1])
+	plt.xlabel('Recall')
+	plt.ylabel('Precision')
+	plt.title('K-NN with Uniform weights for Neg class')
+	plt.savefig("./plots/knn_uniform_neg.png")
+	plt.clf()
 
 
+for p,r in zip(pos_precision_uniform, pos_recall_uniform):
+	# print p
+	# print r
+	plt.scatter(r,p)
+	plt.axis([0,1,0,1])
+	plt.xlabel('Recall')
+	plt.ylabel('Precision')
+	plt.title('K-NN with Uniform weights for Pos class')
+	plt.savefig("./plots/knn_uniform_pos.png")
+	plt.clf()
+
+for p,r in zip(neg_precision_weighted, neg_recall_weighted):
+	# print p
+	# print r
+	plt.scatter(r,p)
+	plt.axis([0,1,0,1])
+	plt.xlabel('Recall')
+	plt.ylabel('Precision')
+	plt.title('K-NN with weights for Neg class')
+	plt.savefig("./plots/knn_weighted_neg.png")
+	plt.clf()
+
+for p,r in zip(neg_precision_weighted, neg_recall_weighted):
+	# print p
+	# print r
+	plt.scatter(r,p)
+	plt.axis([0,1,0,1])
+	plt.xlabel('Recall')
+	plt.ylabel('Precision')
+	plt.title('K-NN with weights for Pos class')
+	plt.savefig("./plots/knn_weighted_pos.png")
+	plt.clf()
