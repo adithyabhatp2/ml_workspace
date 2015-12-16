@@ -4,6 +4,7 @@ from sklearn.feature_extraction import DictVectorizer as DV
 from sklearn.tree import DecisionTreeClassifier
 from sklearn import metrics
 from sklearn.metrics import precision_recall_curve
+from sklearn.cross_validation import StratifiedShuffleSplit
 import matplotlib.pyplot as plt
 from sklearn import tree
 from sklearn import preprocessing

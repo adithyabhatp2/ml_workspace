@@ -125,6 +125,7 @@ del(vec_x_cat_test)
 # working fine upto here - Data Processing
 # below - classifier specific logic
 
+classifier_alg = "RandomForest"
 
 num_estimators = int(sys.argv[2])
 #RandomForestClassifier(n_estimators=10, criterion='gini', max_depth=None, min_samples_split=2, min_samples_leaf=1, 
@@ -142,6 +143,8 @@ predicted = rf_classifier.predict( x_test )
 predicted_train = rf_classifier.predict( x_train )
 print "Train Predictions: \n" + (metrics.classification_report(y_train, predicted_train)) 
 print "Test Predictions: \n" + metrics.classification_report(y_test, predicted)
+
+# Data for plotting
 
 probs = rf_classifier.predict_proba(x_test)
 y_conf=[]
@@ -172,18 +175,16 @@ for i in range(len(y_train)):
 #Neg is 0 in probs and 0 in y_test
 #pos is 1 in probs and 1 in y_test
 
-classifier_alg = "RandomForest"
-
 print "Going to plot ",classifier_alg
 
 for class_to_plot in [0,1]:
-	y_conf = []
+	y_conf = [] # Test Set
 	for i in range(len(y_test)):
 		y_conf.append(probs[i][class_to_plot])
 	precision, recall, thresholds = precision_recall_curve(y_test_num, y_conf, pos_label=class_to_plot)
 	plt.plot(recall,precision)
 	
-	y_train_conf=[]
+	y_train_conf=[] # Train Set
 	for i in range(len(y_train)):
 		y_train_conf.append(probs_train[i][class_to_plot])
 	precision, recall, thresholds = precision_recall_curve(y_train_num, y_train_conf, pos_label=class_to_plot)
@@ -191,13 +192,18 @@ for class_to_plot in [0,1]:
 	
 	if(class_to_plot == 0):
 		plt.axis([0,1,0.8,1])
+		plt.yticks(np.arange(0.8, 1.05, 0.1))
 	else:
 		plt.axis([0,1,0,1])
-	print "Checking class",class_to_plot
+		plt.yticks(np.arange(0, 1.1, 0.1))
+	
+	print "Checking class ",class_to_plot
 	plt.xlabel('Recall')
 	plt.ylabel('Precision')
-	plt.title(classifier_alg+' with ' + str(num_estimators) +' estimators, instance weights for class ' + str(class_to_plot)+' stratified sample '+str(sample_ratio))
-	filename = "./plots/"+classifier_alg+"_none_"+str(num_estimators)+"_"+str(class_to_plot)+".png"
+	plt.grid(b=True, which='major', axis='both', color='black', linestyle='-', alpha=0.3)
+	plt.xticks(np.arange(0, 1.1, 0.1))
+	
+	plt.title(classifier_alg+': ' + str(num_estimators) +' estimators, for class ' + str(class_to_plot)+' stratified sample '+str(sample_ratio))
+	filename = "./plots/"+classifier_alg+"_"+str(class_to_plot)+"_default_"+str(num_estimators)+"_"+str(sample_ratio)+".png"
 	plt.savefig(filename)
 	plt.clf()
-
