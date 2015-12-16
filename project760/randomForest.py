@@ -1,14 +1,14 @@
 import numpy as np
 import pandas as pd
 from sklearn import metrics
-from sklearn.ensemble import AdaBoostClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import precision_recall_curve
 from sklearn.cross_validation import StratifiedShuffleSplit
 import matplotlib.pyplot as plt
 import random
 import sys
 
-# args : adaboost.py float(sampleRatio) and int(numEstimators)
+# args : adaboost.py float(sampleRatio) int(numEstimators) 
 
 data_dir = './input/'	# needs trailing slash
 
@@ -36,6 +36,11 @@ sss = StratifiedShuffleSplit(large_test.Label, n_iter=1, test_size = sample_rati
 for train_split_ind, test_split_ind in sss:
 	print "Sampled Test :", test_split_ind
 	test = large_test.iloc[test_split_ind]
+
+	
+del(large_train)
+del(large_test)
+	
 """"
 train = 
 test = large_test.sample(int(sys.argv[1]))
@@ -105,10 +110,15 @@ vec_x_cat_test = vec_x_cat_combined[x_train_count:]
 
 
 # combine numerical and categorical
-
-x_train = np.hstack(( x_num_train, vec_x_cat_train )) # returns ndarray
-x_test = np.hstack(( x_num_test, vec_x_cat_test ))
-
+del(vec_x_cat_combined)
+x_train = np.hstack(( x_num_train, vec_x_cat_train.ix[:,:200] )) # returns ndarray
+del(x_num_train)
+x_train = np.hstack(( x_train, vec_x_cat_train.ix[:,200:] )) # returns ndarray
+del(vec_x_cat_train)
+x_test = np.hstack(( x_num_test, vec_x_cat_test.ix[:,:200] ))
+del(x_num_test)
+x_test = np.hstack(( x_test, vec_x_cat_test.ix[:,200:] ))
+del(vec_x_cat_test)
 # print "\nx_train: ", x_train.shape, ", ", type(x_train)
 # print "x_test: ", x_test.shape, ", ", type(x_test)
 
@@ -117,24 +127,28 @@ x_test = np.hstack(( x_num_test, vec_x_cat_test ))
 
 
 num_estimators = int(sys.argv[2])
-#sklearn.ensemble.AdaBoostClassifier(base_estimator=None, n_estimators=50, learning_rate=1.0, algorithm='SAMME.R', random_state=None)
-ada_classifier = AdaBoostClassifier(n_estimators=num_estimators)
+#RandomForestClassifier(n_estimators=10, criterion='gini', max_depth=None, min_samples_split=2, min_samples_leaf=1, 
+# min_weight_fraction_leaf=0.0, max_features='auto', max_leaf_nodes=None, bootstrap=True, oob_score=False, n_jobs=1, 
+# random_state=None, verbose=0, warm_start=False, class_weight=None)
+rf_classifier = RandomForestClassifier(n_estimators=num_estimators, n_jobs=2, max_leaf_nodes=50)
 
 print "Before fit"
 
-ada_classifier.fit( x_train, y_train , sample_weight=train['instance weight'].values)
+rf_classifier.fit( x_train, y_train , sample_weight=train['instance weight'].values)
 
 print "Before predict"
 
-predicted = ada_classifier.predict( x_test )
-predicted_train = rf_ada_classifierclassifier.predict( x_train )
+predicted = rf_classifier.predict( x_test )
+predicted_train = rf_classifier.predict( x_train )
 print "Train Predictions: \n" + (metrics.classification_report(y_train, predicted_train)) 
 print "Test Predictions: \n" + metrics.classification_report(y_test, predicted)
 
-
-probs = ada_classifier.predict_proba(x_test)
+probs = rf_classifier.predict_proba(x_test)
 y_conf=[]
 y_test_num=[]
+y_train_conf=[]
+y_train_num=[]
+probs_train = rf_classifier.predict_proba(x_train)
 
 print "Before changing y_label to num"
 print "y_test", len(y_test), "\t", type(y_test)
@@ -148,9 +162,19 @@ for i in range(len(y_test)):
 	else:
 		y_test_num.append(0)
 
+y_train = y_train.as_matrix()
+for i in range(len(y_train)):
+	if(y_train[i] == 'Pos'):
+		y_train_num.append(1)
+	else:
+		y_train_num.append(0)
+
 #Neg is 0 in probs and 0 in y_test
 #pos is 1 in probs and 1 in y_test
-print "Going to plot Ada"
+
+classifier_alg = "RandomForest"
+
+print "Going to plot ",classifier_alg
 
 for class_to_plot in [0,1]:
 	y_conf = []
@@ -158,6 +182,13 @@ for class_to_plot in [0,1]:
 		y_conf.append(probs[i][class_to_plot])
 	precision, recall, thresholds = precision_recall_curve(y_test_num, y_conf, pos_label=class_to_plot)
 	plt.plot(recall,precision)
+	
+	y_train_conf=[]
+	for i in range(len(y_train)):
+		y_train_conf.append(probs_train[i][class_to_plot])
+	precision, recall, thresholds = precision_recall_curve(y_train_num, y_train_conf, pos_label=class_to_plot)
+	plt.plot(recall, precision)
+	
 	if(class_to_plot == 0):
 		plt.axis([0,1,0.8,1])
 	else:
@@ -165,8 +196,8 @@ for class_to_plot in [0,1]:
 	print "Checking class",class_to_plot
 	plt.xlabel('Recall')
 	plt.ylabel('Precision')
-	plt.title('AdaBoost with default base,' + str(num_estimators) +' num, instance weights for class ' + str(class_to_plot)+' stratified sample '+str(sample_ratio))
-	filename = "./plots/ada_none_"+str(num_estimators)+"_"+str(class_to_plot)+".png"
+	plt.title(classifier_alg+' with ' + str(num_estimators) +' estimators, instance weights for class ' + str(class_to_plot)+' stratified sample '+str(sample_ratio))
+	filename = "./plots/"+classifier_alg+"_none_"+str(num_estimators)+"_"+str(class_to_plot)+".png"
 	plt.savefig(filename)
 	plt.clf()
 
