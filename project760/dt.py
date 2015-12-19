@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from sklearn import tree
 from sklearn import preprocessing
 from sklearn.preprocessing import LabelEncoder
+import sys
 
 
 class MultiColumnLabelEncoder:
@@ -70,6 +71,8 @@ numeric_cols = ['age','wage per hour','capital gains','capital losses','dividend
 # remove_cols = ['Label','instance weight','migration code-change in msa','migration code-change in reg','migration code-move within reg','migration prev res in sunbelt']
 remove_cols = ['Label','instance weight']
 cat_cols =  [x for x in all_cols if x not in numeric_cols and x not in remove_cols]
+
+used_cols = [x for x in all_cols if x not in remove_cols]
 
 # handle numerical features
 x_num_train = train[ numeric_cols ].as_matrix()
@@ -161,7 +164,7 @@ x_test = np.hstack(( x_num_test, vec_x_cat_test ))
 
 dt_classifier = DecisionTreeClassifier(min_samples_split=300,max_leaf_nodes=30)
 dt_classifier.fit(x_train,y_train_num)
-tree.export_graphviz(dt_classifier, feature_names=all_cols,out_file="./weighted_tree.dot")
+tree.export_graphviz(dt_classifier, feature_names=used_cols,out_file="./weighted_tree.dot")
 predicted = dt_classifier.predict( x_test )
 
 # # print(metrics.classification_report(expected, predicted))
@@ -193,19 +196,24 @@ for class_to_plot in [0,1]:
 	precision, recall, thresholds = precision_recall_curve(y_test_num, y_conf, pos_label=class_to_plot, sample_weight=test['instance weight'].values)
 	plt.plot(recall,precision)
 	plt.axis([0,1,0,1])
+	plt.yticks(np.arange(0, 1.1, 0.1))
 
 	print "Checking class",class_to_plot
 	plt.xlabel('Recall')
 	plt.ylabel('Precision')
 	plt.title('DT with instance weights for class ' + str(class_to_plot))
+	plt.grid(b=True, which='major', axis='both', color='black', linestyle='-', alpha=0.3)
+	plt.xticks(np.arange(0, 1.1, 0.1))
 	filename = "./plots/dt_weighted_"+str(class_to_plot)+".png"
 	plt.savefig(filename)
-	plt.clf()
+	# plt.clf()
 
 
 # #Learn without Instance weights
+plt.clf()
 
-dt_classifier = DecisionTreeClassifier(min_samples_split=300,max_leaf_nodes=30)
+numLeaves = int(sys.argv[1])
+dt_classifier = DecisionTreeClassifier(max_leaf_nodes=numLeaves)
 dt_classifier.fit( x_train, y_train )
 tree.export_graphviz(dt_classifier, feature_names=all_cols,out_file="./tree.dot")
 
@@ -222,13 +230,32 @@ for class_to_plot in [0,1]:
 	plt.plot(recall,precision)
 	if(class_to_plot == 0):
 		plt.axis([0,1,0.8,1])
+		plt.yticks(np.arange(0.8, 1.05, 0.1))
 	else:
 		plt.axis([0,1,0,1])
+		plt.yticks(np.arange(0, 1.1, 0.1))
 	print "Checking class",class_to_plot
 
 	plt.xlabel('Recall')
 	plt.ylabel('Precision')
 	plt.title('DT without instance weights for class ' + str(class_to_plot))
-	filename = "./plots/dt_unweighted_"+str(class_to_plot)+".png"
+	plt.grid(b=True, which='major', axis='both', color='black', linestyle='-', alpha=0.3)
+	plt.xticks(np.arange(0, 1.1, 0.1))
+	filename = "./plots/dt_unweighted_"+str(class_to_plot)+"maxLeaf_"+str(numLeaves)+".png"
 	plt.savefig(filename)
-	plt.clf()
+	# plt.clf()
+
+
+
+
+temp = dt_classifier.feature_importances_
+print "NumCols : "+str(len(all_cols))
+print "Feautre Importances - length"+str(len(temp))
+print temp
+
+print "Feats"
+
+
+
+for i in range(0, len(temp)):
+	print all_cols[i+2]," ",temp[i]

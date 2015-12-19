@@ -130,8 +130,9 @@ del(vec_x_cat_test)
 classifier_alg = "Ada"
 
 num_estimators = int(sys.argv[2])
+learn_rate = float(sys.argv[3])
 #sklearn.ensemble.AdaBoostClassifier(base_estimator=None, n_estimators=50, learning_rate=1.0, algorithm='SAMME.R', random_state=None)
-ada_classifier = AdaBoostClassifier(n_estimators=num_estimators)
+ada_classifier = AdaBoostClassifier(n_estimators=num_estimators, learning_rate=learn_rate)
 
 
 
@@ -206,6 +207,6 @@ for class_to_plot in [0,1]:
 	plt.xticks(np.arange(0, 1.1, 0.1))
 	
 	plt.title(classifier_alg+': ' + str(num_estimators) +' estimators, for class ' + str(class_to_plot)+' stratified sample '+str(sample_ratio))
-	filename = "./plots/"+classifier_alg+"_"+str(class_to_plot)+"_default_"+str(num_estimators)+"_"+str(sample_ratio)+".png"
+	filename = "./plots/"+classifier_alg+"_"+str(class_to_plot)+"_default_lr"+str(learn_rate)+"_"+str(num_estimators)+"_"+str(sample_ratio)+".png"
 	plt.savefig(filename)
 	plt.clf()
