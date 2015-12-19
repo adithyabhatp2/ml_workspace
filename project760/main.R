@@ -1,5 +1,5 @@
-census.data <- read.csv("D:/Software/gitRepository/ml_workspace/project760/input/census.data.v2.csv", header=TRUE, na.strings="NA")
-census.test <- read.csv("D:/Software/gitRepository/ml_workspace/project760/input/census.test.v2.csv", header=TRUE, na.strings="NA")
+census.data <- read.csv("D:/Software/gitRepository/ml_workspace/project760/input/census.data.v6_addedFeats.csv", header=TRUE, na.strings=c("NA", " NA"))
+census.test <- read.csv("D:/Software/gitRepository/ml_workspace/project760/input/census.test.v6_addedFeats.csv", header=TRUE, na.strings=c("NA", " NA"))
 
 
 
