@@ -1,20 +1,24 @@
 import numpy as np
 import pandas as pd
+from sklearn.feature_extraction import DictVectorizer as DV
+from sklearn import svm
 from sklearn import metrics
-from sklearn.ensemble import AdaBoostClassifier
-from sklearn.metrics import precision_recall_curve
+from sklearn import neighbors, datasets
+from sklearn.metrics import precision_recall_fscore_support
 from sklearn.cross_validation import StratifiedShuffleSplit
 import matplotlib.pyplot as plt
-import random
 import sys
 
-# args : adaboost.py float(sampleRatio) and int(numEstimators)
+
+# args : knn.py float(sampleRatio) 
 
 data_dir = './input/'	# needs trailing slash
 
 # validation split, both files with headers and the Happy column
 train_file = data_dir + 'census.data.v5.csv'
 test_file = data_dir + 'census.test.v5.csv'
+
+
 
 print "Before reading files"
 
@@ -127,36 +131,12 @@ del(vec_x_cat_test)
 # working fine upto here - Data Processing
 # below - classifier specific logic
 
-classifier_alg = "Ada"
+classifier_alg = "KNN"
 
-#num_estimators = int(sys.argv[2])
-#learn_rate = float(sys.argv[3])
-# sklearn.ensemble.AdaBoostClassifier(base_estimator=None, n_estimators=50, learning_rate=1.0, algorithm='SAMME.R', random_state=None)
-# ada_classifier = AdaBoostClassifier(n_estimators=num_estimators, learning_rate=learn_rate)
-
-
-
-# print "Before fit"
-
-# ada_classifier.fit( x_train, y_train , sample_weight=train['instance weight'].values)
-
-# print "Before predict"
-
-# predicted = ada_classifier.predict( x_test )
-# predicted_train = ada_classifier.predict( x_train )
-# print "Train Predictions: \n" + (metrics.classification_report(y_train, predicted_train)) 
-# print "Test Predictions: \n" + metrics.classification_report(y_test, predicted)
-
-# Data for plotting
-
-y_conf=[]
 y_test_num=[]
-y_train_conf=[]
-y_train_num=[]
-
-
-print "Before changing y_label to num"
-print "y_test", len(y_test), "\t", type(y_test)
+print "Before for reset"
+print len(y_test)
+print type(y_test)
 y_test = y_test.as_matrix()
 # print y_test
 for i in range(len(y_test)):
@@ -166,63 +146,112 @@ for i in range(len(y_test)):
 		y_test_num.append(1)
 	else:
 		y_test_num.append(0)
+expected = y_test
 
-y_train = y_train.as_matrix()
-for i in range(len(y_train)):
-	if(y_train[i] == 'Pos'):
-		y_train_num.append(1)
-	else:
-		y_train_num.append(0)
+pos_precision_weighted=[]
+pos_precision_uniform=[]
+pos_recall_weighted=[]
+pos_recall_uniform=[]
 
-#Neg is 0 in probs and 0 in y_test
-#pos is 1 in probs and 1 in y_test
+neg_precision_weighted=[]
+neg_precision_uniform=[]
+neg_recall_weighted=[]
+neg_recall_uniform=[]
 
-print "Going to plot ",classifier_alg
-for num_estimators in [2, 10, 100, 1000]:
-	ada_classifier = AdaBoostClassifier(n_estimators=num_estimators, learning_rate=1)
+print x_train.size
+print y_train.size
 
-	print "Before fit "+str(num_estimators)+" estimators"
-
-	ada_classifier.fit( x_train, y_train , sample_weight=train['instance weight'].values)
-
-	print "Before predict"
-
-	predicted = ada_classifier.predict( x_test )
-	predicted_train = ada_classifier.predict( x_train )
-	print "Train Predictions: \n" + (metrics.classification_report(y_train, predicted_train)) 
-	print "Test Predictions: \n" + metrics.classification_report(y_test, predicted)
-
-	probs = ada_classifier.predict_proba(x_test)
-	probs_train = ada_classifier.predict_proba(x_train)
-	
-	for class_to_plot in [1]:
-		y_conf = [] # Test Set
-		for i in range(len(y_test)):
-			y_conf.append(probs[i][class_to_plot])
-		precision, recall, thresholds = precision_recall_curve(y_test_num, y_conf, pos_label=class_to_plot)
-		plt.plot(recall,precision,label="Test "+str(num_estimators))
-		
-		#y_train_conf=[] # Train Set
-		#for i in range(len(y_train)):
-		#	y_train_conf.append(probs_train[i][class_to_plot])
-		#precision, recall, thresholds = precision_recall_curve(y_train_num, y_train_conf, pos_label=class_to_plot)
-		#plt.plot(recall,precision,label="Train "+str(num_estimators))
-		
-		if(class_to_plot == 0):
-			plt.axis([0,1,0.8,1])
-			plt.yticks(np.arange(0.8, 1.05, 0.1))
+for weights in ['uniform']:
+	print(weights)
+	for n_neighbors in [1, 2, 3, 5, 10]:
+		print("Num neighbors: ")
+		print(n_neighbors)	
+		knn_classifier = neighbors.KNeighborsClassifier(n_neighbors, weights=weights)
+		print "Before fit"
+		knn_classifier.fit(x_train, y_train)
+		print "Before predict"
+		predicted = knn_classifier.predict(x_test)
+		precision, recall, fscore, support = precision_recall_fscore_support(expected, predicted)
+		print "Precision: ",precision
+		print "Recall: ",recall
+		print(metrics.classification_report(expected, predicted))
+		if weights=='distance':
+			pos_precision_weighted.append(precision[1])
+			pos_recall_weighted.append(recall[1])
+			neg_precision_weighted.append(precision[0])
+			neg_recall_weighted.append(recall[0])
 		else:
-			plt.axis([0,1,0,1])
-			plt.yticks(np.arange(0, 1.1, 0.1))
-		
-		print "Checking class ",class_to_plot
-		plt.xlabel('Recall')
-		plt.ylabel('Precision')
-		plt.grid(b=True, which='major', axis='both', color='black', linestyle='-', alpha=0.3)
-		plt.xticks(np.arange(0, 1.1, 0.1))
-		plt.legend(loc='upper right')
-		
-		plt.title(classifier_alg+': varying number of estimators')
-		filename = "./plots/final/"+classifier_alg+"_"+str(class_to_plot)+"_default_lr_"+str(sample_ratio)+"_variousNEsts.png"
-		plt.savefig(filename)
-		#plt.clf()
+			pos_precision_uniform.append(precision[1])
+			pos_recall_uniform.append(recall[1])
+			neg_precision_uniform.append(precision[0])
+			neg_recall_uniform.append(recall[0])
+				
+colors = ['brown', 'red', 'yellow', 'green', 'blue']
+numbers = [1, 2, 3, 5, 10]
+
+print "Going to plot Pos Uniform"
+plt.axis([0,1,0,1])
+plt.xlabel('Recall')
+plt.ylabel('Precision')
+plt.grid(b=True, which='major', axis='both', color='black', linestyle='-', alpha=0.3)
+plt.xticks(np.arange(0, 1.1, 0.1))
+plt.yticks(np.arange(0, 1.1, 0.1))
+plt.title('K-NN - varying \'K\' ')
+for p,r, c, n in zip(pos_precision_uniform, pos_recall_uniform, colors, numbers):
+	# print p
+	# print r
+	plt.scatter(r,p, color = c, label=str(n)+'-NN')
+	
+plt.legend(loc='upper right')
+plt.savefig("./plots/knn_uniform_pos_"+str(sample_ratio)+"_variousK.png")
+plt.clf()
+
+"""
+for p,r in zip(neg_precision_uniform, neg_recall_uniform):
+	# print p
+	# print r
+	plt.scatter(r,p)
+	plt.axis([0,1,0,1])
+	plt.xlabel('Recall')
+	plt.ylabel('Precision')
+	plt.grid(b=True, which='major', axis='both', color='black', linestyle='-', alpha=0.3)
+	plt.xticks(np.arange(0, 1.1, 0.1))
+	plt.yticks(np.arange(0, 1.1, 0.1))
+	plt.title('K-NN with Uniform weights for Neg class')
+	plt.savefig("./plots/knn_uniform_neg_"+str(sample_ratio)+".png")
+	
+plt.clf()
+
+
+
+for p,r in zip(neg_precision_weighted, neg_recall_weighted):
+	# print p
+	# print r
+	plt.scatter(r,p)
+	plt.axis([0,1,0,1])
+	plt.xlabel('Recall')
+	plt.ylabel('Precision')
+	plt.grid(b=True, which='major', axis='both', color='black', linestyle='-', alpha=0.3)
+	plt.xticks(np.arange(0, 1.1, 0.1))
+	plt.yticks(np.arange(0, 1.1, 0.1))
+	plt.title('K-NN with weights for Neg class')
+	plt.savefig("./plots/knn_weighted_neg_"+str(sample_ratio)+".png")
+	
+plt.clf()
+
+print "Going to plot Pos Weighted"
+plt.axis([0,1,0,1])
+plt.xlabel('Recall')
+plt.ylabel('Precision')
+plt.grid(b=True, which='major', axis='both', color='black', linestyle='-', alpha=0.3)
+plt.xticks(np.arange(0, 1.1, 0.1))
+plt.yticks(np.arange(0, 1.1, 0.1))
+plt.title('K-NN with weights for Pos class')
+for p,r,c in zip(pos_precision_weighted, pos_recall_weighted, colors):
+	# print p
+	# print r
+	plt.scatter(r,p, color = c)
+	plt.savefig("./plots/knn_weighted_pos_"+str(sample_ratio)+".png")
+	
+plt.clf()
+"""

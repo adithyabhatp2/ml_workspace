@@ -176,12 +176,12 @@ for i in range(len(y_train)):
 
 #Neg is 0 in probs and 0 in y_test
 #pos is 1 in probs and 1 in y_test
-
+num_estimators = 10
 print "Going to plot ",classifier_alg
-for num_estimators in [2, 10, 100, 1000]:
-	ada_classifier = AdaBoostClassifier(n_estimators=num_estimators, learning_rate=1)
+for learn_rate in [0.5, 1, 10, 100]:
+	ada_classifier = AdaBoostClassifier(n_estimators=num_estimators, learning_rate=learn_rate)
 
-	print "Before fit "+str(num_estimators)+" estimators"
+	print "Before fit"
 
 	ada_classifier.fit( x_train, y_train , sample_weight=train['instance weight'].values)
 
@@ -196,17 +196,17 @@ for num_estimators in [2, 10, 100, 1000]:
 	probs_train = ada_classifier.predict_proba(x_train)
 	
 	for class_to_plot in [1]:
-		y_conf = [] # Test Set
-		for i in range(len(y_test)):
-			y_conf.append(probs[i][class_to_plot])
-		precision, recall, thresholds = precision_recall_curve(y_test_num, y_conf, pos_label=class_to_plot)
-		plt.plot(recall,precision,label="Test "+str(num_estimators))
+		#y_conf = [] # Test Set
+		#for i in range(len(y_test)):
+		#	y_conf.append(probs[i][class_to_plot])
+		#precision, recall, thresholds = precision_recall_curve(y_test_num, y_conf, pos_label=class_to_plot)
+		#plt.plot(recall,precision, label='Test -'+str(learn_rate))
 		
-		#y_train_conf=[] # Train Set
-		#for i in range(len(y_train)):
-		#	y_train_conf.append(probs_train[i][class_to_plot])
-		#precision, recall, thresholds = precision_recall_curve(y_train_num, y_train_conf, pos_label=class_to_plot)
-		#plt.plot(recall,precision,label="Train "+str(num_estimators))
+		y_train_conf=[] # Train Set
+		for i in range(len(y_train)):
+			y_train_conf.append(probs_train[i][class_to_plot])
+		precision, recall, thresholds = precision_recall_curve(y_train_num, y_train_conf, pos_label=class_to_plot)
+		plt.plot(recall, precision, label='Train -'+str(learn_rate))
 		
 		if(class_to_plot == 0):
 			plt.axis([0,1,0.8,1])
@@ -222,7 +222,8 @@ for num_estimators in [2, 10, 100, 1000]:
 		plt.xticks(np.arange(0, 1.1, 0.1))
 		plt.legend(loc='upper right')
 		
-		plt.title(classifier_alg+': varying number of estimators')
-		filename = "./plots/final/"+classifier_alg+"_"+str(class_to_plot)+"_default_lr_"+str(sample_ratio)+"_variousNEsts.png"
+		plt.title(classifier_alg+': various learning rates')
+		filename = "./plots/final/"+classifier_alg+"_"+str(class_to_plot)+"_"+str(num_estimators)+"_nest_"+str(sample_ratio)+"_variousLRs.png"
 		plt.savefig(filename)
 		#plt.clf()
+		

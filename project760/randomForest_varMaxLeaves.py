@@ -1,15 +1,14 @@
 import numpy as np
 import pandas as pd
-from sklearn.feature_extraction import DictVectorizer as DV
-from sklearn.naive_bayes import GaussianNB
 from sklearn import metrics
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import precision_recall_curve
 from sklearn.cross_validation import StratifiedShuffleSplit
 import matplotlib.pyplot as plt
+import random
 import sys
 
-
-# args : classifier.py float(sampleRatio) 
+# args : adaboost.py float(sampleRatio) int(numEstimators) 
 
 data_dir = './input/'	# needs trailing slash
 
@@ -123,39 +122,40 @@ del(vec_x_cat_test)
 # print "\nx_train: ", x_train.shape, ", ", type(x_train)
 # print "x_test: ", x_test.shape, ", ", type(x_test)
 
-
-
 # working fine upto here - Data Processing
 # below - classifier specific logic
 
-classifier_alg = "Naive Bayes"
+classifier_alg = "RandomForest"
 
-naive_bayes = GaussianNB()
+#num_estimators = int(sys.argv[2])
+#RandomForestClassifier(n_estimators=10, criterion='gini', max_depth=None, min_samples_split=2, min_samples_leaf=1, 
+# min_weight_fraction_leaf=0.0, max_features='auto', max_leaf_nodes=None, bootstrap=True, oob_score=False, n_jobs=1, 
+# random_state=None, verbose=0, warm_start=False, class_weight=None)
+# rf_classifier = RandomForestClassifier(n_estimators=num_estimators, n_jobs=2, max_leaf_nodes=50)
 
-print "Before fit"
+# print "Before fit"
 
-naive_bayes.fit( x_train, y_train , sample_weight=train['instance weight'].values)
+# rf_classifier.fit( x_train, y_train , sample_weight=train['instance weight'].values)
 
-print "Before predict"
+# print "Before predict"
 
-predicted = naive_bayes.predict( x_test )
-predicted_train = naive_bayes.predict( x_train )
-print "Train Predictions: \n" + (metrics.classification_report(y_train, predicted_train)) 
-print "Test Predictions: \n" + metrics.classification_report(y_test, predicted)
+# predicted = rf_classifier.predict( x_test )
+# predicted_train = rf_classifier.predict( x_train )
+# print "Train Predictions: \n" + (metrics.classification_report(y_train, predicted_train)) 
+# print "Test Predictions: \n" + metrics.classification_report(y_test, predicted)
 
 # Data for plotting
 
-probs = naive_bayes.predict_proba(x_test)
+
 y_conf=[]
 y_test_num=[]
 y_train_conf=[]
 y_train_num=[]
-probs_train = naive_bayes.predict_proba(x_train)
 
 print "Before changing y_label to num"
 print "y_test", len(y_test), "\t", type(y_test)
 y_test = y_test.as_matrix()
-# print y_test
+
 for i in range(len(y_test)):
 	# print y_test[i]
 	# print i
@@ -175,59 +175,52 @@ for i in range(len(y_train)):
 #pos is 1 in probs and 1 in y_test
 
 print "Going to plot ",classifier_alg
+num_estimators = 100
+for leaf_nodes in [30, 300, 3000]:
+	rf_classifier = RandomForestClassifier(n_estimators=num_estimators, n_jobs=2, max_leaf_nodes=leaf_nodes)
 
-for class_to_plot in [0,1]:
-	y_conf = [] # Test Set
-	for i in range(len(y_test)):
-		y_conf.append(probs[i][class_to_plot])
-	precision, recall, thresholds = precision_recall_curve(y_test_num, y_conf, pos_label=class_to_plot)
-	plt.plot(recall,precision)
-	
-	y_train_conf=[] # Train Set
-	for i in range(len(y_train)):
-		y_train_conf.append(probs_train[i][class_to_plot])
-	precision, recall, thresholds = precision_recall_curve(y_train_num, y_train_conf, pos_label=class_to_plot)
-	plt.plot(recall, precision)
-	
-	if(class_to_plot == 0):
-		plt.axis([0,1,0.8,1])
-		plt.yticks(np.arange(0.8, 1.05, 0.1))
-	else:
-		plt.axis([0,1,0,1])
-		plt.yticks(np.arange(0, 1.1, 0.1))
-	
-	print "Checking class ",class_to_plot
-	plt.xlabel('Recall')
-	plt.ylabel('Precision')
-	plt.grid(b=True, which='major', axis='both', color='black', linestyle='-', alpha=0.3)
-	plt.xticks(np.arange(0, 1.1, 0.1))
-	
-	plt.title(classifier_alg+': ' + str(class_to_plot)) #+' stratified sample '+str(sample_ratio))
-	filename = "./plots/"+ classifier_alg + "_"+str(class_to_plot)+"_default_"+str(sample_ratio)+".png"#+str(num_estimators)+"_"
-	plt.savefig(filename)
-	plt.clf()
+	print "Before fit"
 
+	rf_classifier.fit( x_train, y_train , sample_weight=train['instance weight'].values)
 
-"""
-#Learn without Instance weights
+	print "Before predict"
 
-naive_bayes = GaussianNB()
-naive_bayes.fit( x_train, y_train )
+	predicted = rf_classifier.predict( x_test )
+	predicted_train = rf_classifier.predict( x_train )
+	print "Train Predictions: \n" + (metrics.classification_report(y_train, predicted_train)) 
+	print "Test Predictions: \n" + metrics.classification_report(y_test, predicted)
 
-predicted = naive_bayes.predict( x_test )
+	probs = rf_classifier.predict_proba(x_test)
+	probs_train = rf_classifier.predict_proba(x_train)
 
-for class_to_plot in [0,1]:
-	y_conf = []
-	for i in range(len(y_test)):
-		y_conf.append(probs[i][class_to_plot])
-	precision, recall, thresholds = precision_recall_curve(y_test_num, y_conf, pos_label=class_to_plot)
-	plt.plot(recall,precision)
-	plt.axis([0,1,0,1])
-	plt.xlabel('Recall')
-	plt.ylabel('Precision')
-	plt.title('NB without instance weights for class ' + str(class_to_plot))
-	filename = "./plots/nb_unweighted_"+str(class_to_plot)+".png"
-	plt.savefig(filename)
-	plt.clf()
-"""
-
+	for class_to_plot in [1]:
+		y_conf = [] # Test Set
+		for i in range(len(y_test)):
+			y_conf.append(probs[i][class_to_plot])
+		precision, recall, thresholds = precision_recall_curve(y_test_num, y_conf, pos_label=class_to_plot)
+		plt.plot(recall,precision, label='Test -'+str(leaf_nodes))
+		
+		#y_train_conf=[] # Train Set
+		#for i in range(len(y_train)):
+		#	y_train_conf.append(probs_train[i][class_to_plot])
+		#precision, recall, thresholds = precision_recall_curve(y_train_num, y_train_conf, pos_label=class_to_plot)
+		#plt.plot(recall, precision, label='Train -'+str(leaf_nodes))
+		
+		if(class_to_plot == 0):
+			plt.axis([0,1,0.8,1])
+			plt.yticks(np.arange(0.8, 1.05, 0.1))
+		else:
+			plt.axis([0,1,0,1])
+			plt.yticks(np.arange(0, 1.1, 0.1))
+		
+		print "Checking class ",class_to_plot
+		plt.xlabel('Recall')
+		plt.ylabel('Precision')
+		plt.grid(b=True, which='major', axis='both', color='black', linestyle='-', alpha=0.3)
+		plt.xticks(np.arange(0, 1.1, 0.1))
+		plt.legend(loc='lower left')
+		
+		plt.title(classifier_alg+': varying max_num_leaves ')
+		filename = "./plots/final/"+classifier_alg+"_"+str(class_to_plot)+"_100ests_"+str(sample_ratio)+".png"
+		plt.savefig(filename)
+		#plt.clf()

@@ -18,6 +18,18 @@ data_dir = './input/'	# needs trailing slash
 train_file = data_dir + 'census.data.v5.csv'
 test_file = data_dir + 'census.test.v5.csv'
 
+
+pos_precision_weighted=[]
+pos_precision_uniform=[]
+pos_recall_weighted=[]
+pos_recall_uniform=[]
+
+neg_precision_weighted=[]
+neg_precision_uniform=[]
+neg_recall_weighted=[]
+neg_recall_uniform=[]
+
+
 for sample_ratio in [0.05, 0.1, 0.15, 0.2]:
 
 	print "Before reading files"
@@ -148,20 +160,12 @@ for sample_ratio in [0.05, 0.1, 0.15, 0.2]:
 			y_test_num.append(0)
 	expected = y_test
 
-	pos_precision_weighted=[]
-	pos_precision_uniform=[]
-	pos_recall_weighted=[]
-	pos_recall_uniform=[]
 
-	neg_precision_weighted=[]
-	neg_precision_uniform=[]
-	neg_recall_weighted=[]
-	neg_recall_uniform=[]
 
 	print x_train.size
 	print y_train.size
 
-	for weights in ['distance', 'uniform']:
+	for weights in ['uniform']:
 		print(weights)
 		for n_neighbors in [3]:
 			print("Num neighbors: ")
@@ -186,7 +190,9 @@ for sample_ratio in [0.05, 0.1, 0.15, 0.2]:
 				neg_precision_uniform.append(precision[0])
 				neg_recall_uniform.append(recall[0])
 				
-colors = ['red', 'blue', 'green']
+colors = ['red', 'yellow', 'green', 'blue']
+#numbers = [1, 2, 3, 4]
+sample_ratio = [0.05, 0.1, 0.15, 0.2]
 
 print "Going to plot Pos Uniform"
 plt.axis([0,1,0,1])
@@ -195,13 +201,16 @@ plt.ylabel('Precision')
 plt.grid(b=True, which='major', axis='both', color='black', linestyle='-', alpha=0.3)
 plt.xticks(np.arange(0, 1.1, 0.1))
 plt.yticks(np.arange(0, 1.1, 0.1))
-plt.title('K-NN with Uniform weights for Pos class')
-for p,r, c in zip(pos_precision_uniform, pos_recall_uniform, colors):
+plt.title('K-NN for Pos class - Uniformly weighted neighbors')
+for p,r, c, n in zip(pos_precision_uniform, pos_recall_uniform, colors, sample_ratio):
 	# print p
 	# print r
-	plt.scatter(r,p, color = c)
-	plt.savefig("./plots/knn_uniform_pos_"+str(sample_ratio)+".png")
-	
+	plt.scatter(r,p, color = c, label=str(n))
+	#print "Saving intermediate"
+	#plt.savefig("./plots/knn_uniform_pos_variousRatios"+".png")
+print "Saving final"
+plt.legend(loc='upper right')
+plt.savefig("./plots/knn_uniform_pos_variousRatios"+".png")
 plt.clf()
 
 """

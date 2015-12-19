@@ -127,7 +127,7 @@ del(vec_x_cat_test)
 
 classifier_alg = "RandomForest"
 
-num_estimators = int(sys.argv[2])
+#num_estimators = int(sys.argv[2])
 #RandomForestClassifier(n_estimators=10, criterion='gini', max_depth=None, min_samples_split=2, min_samples_leaf=1, 
 # min_weight_fraction_leaf=0.0, max_features='auto', max_leaf_nodes=None, bootstrap=True, oob_score=False, n_jobs=1, 
 # random_state=None, verbose=0, warm_start=False, class_weight=None)
@@ -176,7 +176,7 @@ for i in range(len(y_train)):
 
 print "Going to plot ",classifier_alg
 
-for num_estimators in [2, 10, 100]:
+for num_estimators in [2, 10, 100, 1000]:
 	rf_classifier = RandomForestClassifier(n_estimators=num_estimators, n_jobs=2, max_leaf_nodes=50)
 
 	print "Before fit"
@@ -198,13 +198,13 @@ for num_estimators in [2, 10, 100]:
 		for i in range(len(y_test)):
 			y_conf.append(probs[i][class_to_plot])
 		precision, recall, thresholds = precision_recall_curve(y_test_num, y_conf, pos_label=class_to_plot)
-		plt.plot(recall,precision)
+		plt.plot(recall,precision, label="TEST -"+str(num_estimators))
 		
-		y_train_conf=[] # Train Set
-		for i in range(len(y_train)):
-			y_train_conf.append(probs_train[i][class_to_plot])
-		precision, recall, thresholds = precision_recall_curve(y_train_num, y_train_conf, pos_label=class_to_plot)
-		plt.plot(recall, precision)
+		#y_train_conf=[] # Train Set
+		#for i in range(len(y_train)):
+		#	y_train_conf.append(probs_train[i][class_to_plot])
+		#precision, recall, thresholds = precision_recall_curve(y_train_num, y_train_conf, pos_label=class_to_plot)
+		#plt.plot(recall, precision, label="TRAIN -"+str(num_estimators))
 		
 		if(class_to_plot == 0):
 			plt.axis([0,1,0.8,1])
@@ -218,8 +218,8 @@ for num_estimators in [2, 10, 100]:
 		plt.ylabel('Precision')
 		plt.grid(b=True, which='major', axis='both', color='black', linestyle='-', alpha=0.3)
 		plt.xticks(np.arange(0, 1.1, 0.1))
-		
-		plt.title(classifier_alg+': ' + str(num_estimators) +' estimators, for class ' + str(class_to_plot)+' stratified sample '+str(sample_ratio))
-		filename = "./plots/"+classifier_alg+"_"+str(class_to_plot)+"_default_"+str(num_estimators)+"_"+str(sample_ratio)+".png"
+		plt.legend(loc='upper right')
+		plt.title(classifier_alg+': Varying number of estimators')
+		filename = "./plots/final/"+classifier_alg+"_50leaves_"+str(sample_ratio)+"_variousNEsts.png"
 		plt.savefig(filename)
-		plt.clf()
+		#plt.clf()

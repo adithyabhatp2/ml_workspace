@@ -3,14 +3,14 @@ svm - with feature selection sampleratio = 0.1 						- srini
 dt -  Different max_leaves (30, 40, 50) (1) 							- srini
 	- PR curve one to show fitting/overfitting	maxLeaf = 30???				
 nb - Weighted and unweighted sampleratio = 0.99						- srini	
-knn - k=3; sampleratio = 0.05, 0.1, 0.15, 0.2 						- adbhat done {Red, Blue, Green}
-	- k = 1,2,3 sampleratio = 0.1
-ada - 2, 10, 100, 1000 estimators in 1 graph (learning rate 1) 		- adbhat
-	- 10 estimators with learning rate 0.5,1,10,100
-rf - 2, 10, 100 estimators 											- adbhat
-	- maxLeaves - (30, 40, 50)
+knn - k=3; sampleratio = 0.05, 0.1, 0.15, 0.2 						- adbhat - done
+	- k = 1,2,3 sampleratio = 0.1							- adbhat - done
+ada - 2, 10, 100, 1000 estimators in 1 graph (learning rate 1) 				- adbhat - done
+	- 10 estimators with learning rate 0.5,1,10,100					- adbhat - done
+rf - 2, 10, 100 estimators 								- adbhat - done
+	- maxLeaves - (30, 300, 3000)							- adbhat - done
 Feature Imp / Discussion : 
-	- Table of feature importance									- adbhat
+	- Table of feature importance							- adbhat - below
 
 
 
