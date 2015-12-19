@@ -131,32 +131,31 @@ num_estimators = int(sys.argv[2])
 #RandomForestClassifier(n_estimators=10, criterion='gini', max_depth=None, min_samples_split=2, min_samples_leaf=1, 
 # min_weight_fraction_leaf=0.0, max_features='auto', max_leaf_nodes=None, bootstrap=True, oob_score=False, n_jobs=1, 
 # random_state=None, verbose=0, warm_start=False, class_weight=None)
-rf_classifier = RandomForestClassifier(n_estimators=num_estimators, n_jobs=2, max_leaf_nodes=50)
+# rf_classifier = RandomForestClassifier(n_estimators=num_estimators, n_jobs=2, max_leaf_nodes=50)
 
-print "Before fit"
+# print "Before fit"
 
-rf_classifier.fit( x_train, y_train , sample_weight=train['instance weight'].values)
+# rf_classifier.fit( x_train, y_train , sample_weight=train['instance weight'].values)
 
-print "Before predict"
+# print "Before predict"
 
-predicted = rf_classifier.predict( x_test )
-predicted_train = rf_classifier.predict( x_train )
-print "Train Predictions: \n" + (metrics.classification_report(y_train, predicted_train)) 
-print "Test Predictions: \n" + metrics.classification_report(y_test, predicted)
+# predicted = rf_classifier.predict( x_test )
+# predicted_train = rf_classifier.predict( x_train )
+# print "Train Predictions: \n" + (metrics.classification_report(y_train, predicted_train)) 
+# print "Test Predictions: \n" + metrics.classification_report(y_test, predicted)
 
 # Data for plotting
 
-probs = rf_classifier.predict_proba(x_test)
+
 y_conf=[]
 y_test_num=[]
 y_train_conf=[]
 y_train_num=[]
-probs_train = rf_classifier.predict_proba(x_train)
 
 print "Before changing y_label to num"
 print "y_test", len(y_test), "\t", type(y_test)
 y_test = y_test.as_matrix()
-# print y_test
+
 for i in range(len(y_test)):
 	# print y_test[i]
 	# print i
@@ -177,33 +176,50 @@ for i in range(len(y_train)):
 
 print "Going to plot ",classifier_alg
 
-for class_to_plot in [0,1]:
-	y_conf = [] # Test Set
-	for i in range(len(y_test)):
-		y_conf.append(probs[i][class_to_plot])
-	precision, recall, thresholds = precision_recall_curve(y_test_num, y_conf, pos_label=class_to_plot)
-	plt.plot(recall,precision)
-	
-	y_train_conf=[] # Train Set
-	for i in range(len(y_train)):
-		y_train_conf.append(probs_train[i][class_to_plot])
-	precision, recall, thresholds = precision_recall_curve(y_train_num, y_train_conf, pos_label=class_to_plot)
-	plt.plot(recall, precision)
-	
-	if(class_to_plot == 0):
-		plt.axis([0,1,0.8,1])
-		plt.yticks(np.arange(0.8, 1.05, 0.1))
-	else:
-		plt.axis([0,1,0,1])
-		plt.yticks(np.arange(0, 1.1, 0.1))
-	
-	print "Checking class ",class_to_plot
-	plt.xlabel('Recall')
-	plt.ylabel('Precision')
-	plt.grid(b=True, which='major', axis='both', color='black', linestyle='-', alpha=0.3)
-	plt.xticks(np.arange(0, 1.1, 0.1))
-	
-	plt.title(classifier_alg+': ' + str(num_estimators) +' estimators, for class ' + str(class_to_plot)+' stratified sample '+str(sample_ratio))
-	filename = "./plots/"+classifier_alg+"_"+str(class_to_plot)+"_default_"+str(num_estimators)+"_"+str(sample_ratio)+".png"
-	plt.savefig(filename)
-	plt.clf()
+for num_estimators in [2, 10, 100]:
+	rf_classifier = RandomForestClassifier(n_estimators=num_estimators, n_jobs=2, max_leaf_nodes=50)
+
+	print "Before fit"
+
+	rf_classifier.fit( x_train, y_train , sample_weight=train['instance weight'].values)
+
+	print "Before predict"
+
+	predicted = rf_classifier.predict( x_test )
+	predicted_train = rf_classifier.predict( x_train )
+	print "Train Predictions: \n" + (metrics.classification_report(y_train, predicted_train)) 
+	print "Test Predictions: \n" + metrics.classification_report(y_test, predicted)
+
+	probs = rf_classifier.predict_proba(x_test)
+	probs_train = rf_classifier.predict_proba(x_train)
+
+	for class_to_plot in [1]:
+		y_conf = [] # Test Set
+		for i in range(len(y_test)):
+			y_conf.append(probs[i][class_to_plot])
+		precision, recall, thresholds = precision_recall_curve(y_test_num, y_conf, pos_label=class_to_plot)
+		plt.plot(recall,precision)
+		
+		y_train_conf=[] # Train Set
+		for i in range(len(y_train)):
+			y_train_conf.append(probs_train[i][class_to_plot])
+		precision, recall, thresholds = precision_recall_curve(y_train_num, y_train_conf, pos_label=class_to_plot)
+		plt.plot(recall, precision)
+		
+		if(class_to_plot == 0):
+			plt.axis([0,1,0.8,1])
+			plt.yticks(np.arange(0.8, 1.05, 0.1))
+		else:
+			plt.axis([0,1,0,1])
+			plt.yticks(np.arange(0, 1.1, 0.1))
+		
+		print "Checking class ",class_to_plot
+		plt.xlabel('Recall')
+		plt.ylabel('Precision')
+		plt.grid(b=True, which='major', axis='both', color='black', linestyle='-', alpha=0.3)
+		plt.xticks(np.arange(0, 1.1, 0.1))
+		
+		plt.title(classifier_alg+': ' + str(num_estimators) +' estimators, for class ' + str(class_to_plot)+' stratified sample '+str(sample_ratio))
+		filename = "./plots/"+classifier_alg+"_"+str(class_to_plot)+"_default_"+str(num_estimators)+"_"+str(sample_ratio)+".png"
+		plt.savefig(filename)
+		plt.clf()

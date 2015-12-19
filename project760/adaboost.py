@@ -131,30 +131,29 @@ classifier_alg = "Ada"
 
 num_estimators = int(sys.argv[2])
 learn_rate = float(sys.argv[3])
-#sklearn.ensemble.AdaBoostClassifier(base_estimator=None, n_estimators=50, learning_rate=1.0, algorithm='SAMME.R', random_state=None)
-ada_classifier = AdaBoostClassifier(n_estimators=num_estimators, learning_rate=learn_rate)
+# sklearn.ensemble.AdaBoostClassifier(base_estimator=None, n_estimators=50, learning_rate=1.0, algorithm='SAMME.R', random_state=None)
+# ada_classifier = AdaBoostClassifier(n_estimators=num_estimators, learning_rate=learn_rate)
 
 
 
-print "Before fit"
+# print "Before fit"
 
-ada_classifier.fit( x_train, y_train , sample_weight=train['instance weight'].values)
+# ada_classifier.fit( x_train, y_train , sample_weight=train['instance weight'].values)
 
-print "Before predict"
+# print "Before predict"
 
-predicted = ada_classifier.predict( x_test )
-predicted_train = ada_classifier.predict( x_train )
-print "Train Predictions: \n" + (metrics.classification_report(y_train, predicted_train)) 
-print "Test Predictions: \n" + metrics.classification_report(y_test, predicted)
+# predicted = ada_classifier.predict( x_test )
+# predicted_train = ada_classifier.predict( x_train )
+# print "Train Predictions: \n" + (metrics.classification_report(y_train, predicted_train)) 
+# print "Test Predictions: \n" + metrics.classification_report(y_test, predicted)
 
 # Data for plotting
 
-probs = ada_classifier.predict_proba(x_test)
 y_conf=[]
 y_test_num=[]
 y_train_conf=[]
 y_train_num=[]
-probs_train = ada_classifier.predict_proba(x_train)
+
 
 print "Before changing y_label to num"
 print "y_test", len(y_test), "\t", type(y_test)
@@ -179,34 +178,50 @@ for i in range(len(y_train)):
 #pos is 1 in probs and 1 in y_test
 
 print "Going to plot ",classifier_alg
+for num_estimators in [2, 10, 100]:
+	ada_classifier = AdaBoostClassifier(n_estimators=num_estimators, learning_rate=learn_rate)
 
-for class_to_plot in [0,1]:
-	y_conf = [] # Test Set
-	for i in range(len(y_test)):
-		y_conf.append(probs[i][class_to_plot])
-	precision, recall, thresholds = precision_recall_curve(y_test_num, y_conf, pos_label=class_to_plot)
-	plt.plot(recall,precision)
+	print "Before fit"
+
+	ada_classifier.fit( x_train, y_train , sample_weight=train['instance weight'].values)
+
+	print "Before predict"
+
+	predicted = ada_classifier.predict( x_test )
+	predicted_train = ada_classifier.predict( x_train )
+	print "Train Predictions: \n" + (metrics.classification_report(y_train, predicted_train)) 
+	print "Test Predictions: \n" + metrics.classification_report(y_test, predicted)
+
+	probs = ada_classifier.predict_proba(x_test)
+	probs_train = ada_classifier.predict_proba(x_train)
 	
-	y_train_conf=[] # Train Set
-	for i in range(len(y_train)):
-		y_train_conf.append(probs_train[i][class_to_plot])
-	precision, recall, thresholds = precision_recall_curve(y_train_num, y_train_conf, pos_label=class_to_plot)
-	plt.plot(recall, precision)
-	
-	if(class_to_plot == 0):
-		plt.axis([0,1,0.8,1])
-		plt.yticks(np.arange(0.8, 1.05, 0.1))
-	else:
-		plt.axis([0,1,0,1])
-		plt.yticks(np.arange(0, 1.1, 0.1))
-	
-	print "Checking class ",class_to_plot
-	plt.xlabel('Recall')
-	plt.ylabel('Precision')
-	plt.grid(b=True, which='major', axis='both', color='black', linestyle='-', alpha=0.3)
-	plt.xticks(np.arange(0, 1.1, 0.1))
-	
-	plt.title(classifier_alg+': ' + str(num_estimators) +' estimators, for class ' + str(class_to_plot)+' stratified sample '+str(sample_ratio))
-	filename = "./plots/"+classifier_alg+"_"+str(class_to_plot)+"_default_lr"+str(learn_rate)+"_"+str(num_estimators)+"_"+str(sample_ratio)+".png"
-	plt.savefig(filename)
-	plt.clf()
+	for class_to_plot in [1]:
+		y_conf = [] # Test Set
+		for i in range(len(y_test)):
+			y_conf.append(probs[i][class_to_plot])
+		precision, recall, thresholds = precision_recall_curve(y_test_num, y_conf, pos_label=class_to_plot)
+		plt.plot(recall,precision)
+		
+		y_train_conf=[] # Train Set
+		for i in range(len(y_train)):
+			y_train_conf.append(probs_train[i][class_to_plot])
+		precision, recall, thresholds = precision_recall_curve(y_train_num, y_train_conf, pos_label=class_to_plot)
+		plt.plot(recall, precision)
+		
+		if(class_to_plot == 0):
+			plt.axis([0,1,0.8,1])
+			plt.yticks(np.arange(0.8, 1.05, 0.1))
+		else:
+			plt.axis([0,1,0,1])
+			plt.yticks(np.arange(0, 1.1, 0.1))
+		
+		print "Checking class ",class_to_plot
+		plt.xlabel('Recall')
+		plt.ylabel('Precision')
+		plt.grid(b=True, which='major', axis='both', color='black', linestyle='-', alpha=0.3)
+		plt.xticks(np.arange(0, 1.1, 0.1))
+		
+		plt.title(classifier_alg+': ' + str(num_estimators) +' estimators, for class ' + str(class_to_plot)+' stratified sample '+str(sample_ratio))
+		filename = "./plots/"+classifier_alg+"_"+str(class_to_plot)+"_default_lr"+str(learn_rate)+"_"+str(num_estimators)+"_"+str(sample_ratio)+".png"
+		plt.savefig(filename)
+		plt.clf()
