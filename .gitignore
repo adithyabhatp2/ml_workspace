@@ -1,3 +1,9 @@
+
+**/.idea/**
+**/*.class
+**/*~
+**/*.swp
+
 # Windows image file caches
 Thumbs.db
 ehthumbs.db
