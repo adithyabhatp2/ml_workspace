@@ -14,7 +14,7 @@ import java.util.Scanner;
  */
 public class UciDatasetInstanceParser {
 
-    public Instances parseFromUciDataFile(String filePath) throws IOException {
+    public static Instances parseFromUciDataFile(String filePath) throws IOException {
         Scanner sc = new Scanner(Paths.get(filePath));
 
         boolean isNumFeaturesExtracted = false;
@@ -117,15 +117,19 @@ public class UciDatasetInstanceParser {
         String filePath = "/u/a/d/adbhat/private/gitRepository/ml_workspace/NeuralNetworks/inputs/red-wine-quality-train.data";
         String thoracicTrainPath = "/u/a/d/adbhat/private/gitRepository/ml_workspace/NeuralNetworks/inputs/Thoracic_Surgery_Data_train.data";
 
-        UciDatasetInstanceParser parser = new UciDatasetInstanceParser();
-
-        Instances instances = parser.parseFromUciDataFile(thoracicTrainPath);
+        Instances instances = parseFromUciDataFile(thoracicTrainPath);
 
         System.out.println("Num Classes " + instances.numClasses());
         System.out.println("Num Attributes " + instances.numAttributes());
         System.out.println("Num Instances " + instances.numInstances());
 
-        System.out.println(instances.toSummaryString());
+        Instance first = instances.firstInstance();
+
+        for(int i=1;i<21;i++) {
+            System.out.println(first.value(i) + "\t" + first.stringValue(i));
+        }
+
+        // System.out.println(instances.toSummaryString());
         // System.out.println(instances.toString());
 
     }

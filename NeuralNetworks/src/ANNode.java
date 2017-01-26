@@ -32,7 +32,7 @@ public class ANNode
 		// compute error
 		double predictedClass = (output > 0.5)? 1.0 : 0.0;
 		double actualClass = inst.classValue();
-//		double error = computeError(actualClass, predictedClass, "Squared");
+		// double error = computeError(actualClass, predictedClass, "Squared");
 		// TODO : use output instead.. but not used here in paticular
 
 		if(debugLevel <= 2)
@@ -45,11 +45,8 @@ public class ANNode
 		double partialErrors[] = new double[this.inputs.length];
 		for (int i = 0;i < this.inputs.length;i++)
 			{
-			partialErrors[i] = (-1.0) * (actualClass - output); // partial
-																// derivative
-																// err by o
-			partialErrors[i] *= (output) * (1 - output); // partial derivative o
-															// by net
+			partialErrors[i] = (-1.0) * (actualClass - output); // partial derivative err by o
+			partialErrors[i] *= (output) * (1 - output); // partial derivative o by net
 			partialErrors[i] *= this.inputs[i]; // partial derivative net by w
 			}
 
