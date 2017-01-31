@@ -1,144 +1,149 @@
 import java.util.Arrays;
+
 import weka.core.Instance;
 
-public class ANNode
-	{
-	double learningRate = 0.1;
-	double[] weights;
+public class ANNode {
+    private double learningRate = 0.1;
 
-	private double[] inputs; // [0] - weight for factor 1
-	int debugLevel = 3;
+    private double[] weights;
+    private double[] inputs; // [0] - weight for factor 1
+    private int debugLevel = 3;
 
-	public ANNode(int numInputs, double learningRate)
-		{
-		inputs = new double[numInputs + 1]; // [0] - bias constant 1
-		weights = new double[numInputs + 1];
-		Arrays.fill(inputs, 0.1);
-		Arrays.fill(weights, 0.1);
-		inputs[0] = 1;
-		this.learningRate = learningRate;
-		}
+    public ANNode(int numInputs, double learningRate) {
+        inputs = new double[numInputs + 1]; // [0] - bias constant 1
+        weights = new double[numInputs + 1];
+        Arrays.fill(inputs, 0.1);
+        Arrays.fill(weights, 0.1);
+        inputs[0] = 1;
+        this.learningRate = learningRate;
+    }
 
-	/**
-	 * @param inst
-	 * @return predicted value of inst.ClassValue() [nominal : index as double]
-	 */
-	public double predictAndLearn(Instance inst)
-		{
-		this.loadInputAttributes(inst);
-		double net = this.computeNet();
-		double output = computeOutput(net);
+    public ANNode(ANNode otherNode) {
+        this.weights = Arrays.copyOf(otherNode.getWeights(), otherNode.getWeights().length);
+        this.inputs = Arrays.copyOf(otherNode.getInputs(), otherNode.getInputs().length);
+        this.learningRate = otherNode.getLearningRate();
+    }
 
-		// compute error
-		double predictedClass = (output > 0.5)? 1.0 : 0.0;
-		double actualClass = inst.classValue();
-		// double error = computeError(actualClass, predictedClass, "Squared");
-		// TODO : use output instead.. but not used here in paticular
+    /**
+     * Predicts the class for the given instances, updates weights if miscllasified.
+     * @param inst
+     * @return
+     */
+    public double predictAndLearn(Instance inst) {
+        this.loadInputAttributes(inst);
+        double net = this.computeNet();
+        double output = computeOutput(net);
 
-		if(debugLevel <= 2)
-			{
-			System.out.println("Actual: " + actualClass + "\tOutput: " + output + " \tNet: " + net);
-			}
+        // compute error
+        double predictedClass = (output > 0.5) ? 1.0 : 0.0;
+        double actualClass = inst.classValue();
+        // double error = computeError(actualClass, predictedClass, "Squared");
+        // TODO : use output instead.. but not used here in paticular
 
-		// stochastic gradient descent to minimize error
-		// not optimizing - readability, understanding
-		double partialErrors[] = new double[this.inputs.length];
-		for (int i = 0;i < this.inputs.length;i++)
-			{
-			partialErrors[i] = (-1.0) * (actualClass - output); // partial derivative err by o
-			partialErrors[i] *= (output) * (1 - output); // partial derivative o by net
-			partialErrors[i] *= this.inputs[i]; // partial derivative net by w
-			}
+        if (debugLevel <= 2) {
+            System.out.println("Actual: " + actualClass + "\tOutput: " + output + " \tNet: " + net);
+        }
 
-		double weightChanges[] = new double[this.inputs.length];
-		for (int i = 0;i < this.inputs.length;i++)
-			{
-			weightChanges[i] = -1.0 * this.learningRate * partialErrors[i];
-			}
+        // stochastic gradient descent to minimize error
+        // not optimizing - readability, understanding
+        double partialErrors[] = new double[this.inputs.length];
+        for (int i = 0; i < this.inputs.length; i++) {
+            partialErrors[i] = (-1.0) * (actualClass - output); // partial derivative err by o
+            partialErrors[i] *= (output) * (1 - output); // partial derivative o by net
+            partialErrors[i] *= this.inputs[i]; // partial derivative net by w
+        }
 
-		if(debugLevel <= 1)
-			{
-			System.out.println("Partial Errors : \t" + Arrays.toString(partialErrors));
-			System.out.println("Original Weights: \t" + Arrays.toString(this.weights));
-			System.out.println("Weight Changes : \t" + Arrays.toString(weightChanges));
-			}
+        double weightChanges[] = new double[this.inputs.length];
+        for (int i = 0; i < this.inputs.length; i++) {
+            weightChanges[i] = -1.0 * this.learningRate * partialErrors[i];
+        }
 
-		// separating just to enable debugging.. TODO: merge loops
-		for (int i = 0;i < this.inputs.length;i++)
-			{
-			this.weights[i] += weightChanges[i];
-			}
+        if (debugLevel <= 1) {
+            System.out.println("Partial Errors : \t" + Arrays.toString(partialErrors));
+            System.out.println("Original Weights: \t" + Arrays.toString(this.weights));
+            System.out.println("Weight Changes : \t" + Arrays.toString(weightChanges));
+        }
 
-		return predictedClass;
-		}
+        // separating just to enable debugging.. TODO: merge loops
+        for (int i = 0; i < this.inputs.length; i++) {
+            this.weights[i] += weightChanges[i];
+        }
 
-	private double computeError(double actual, double predicted, String errorType)
-		{
-		double err = 0.0;
-		if(errorType.toLowerCase().trim().equals("squared"))
-			{
-			err = Math.pow(actual - predicted, 2) / 2.0;
-			}
-		return err;
-		}
+        return predictedClass;
+    }
 
-	public double predictOnly(Instance inst)
-		{
-		this.loadInputAttributes(inst);
-		double net = this.computeNet();
-		double output = computeOutput(net);
+    private double computeError(double actual, double predicted, String errorType) {
+        double err = 0.0;
+        if (errorType.toLowerCase().trim().equals("squared")) {
+            err = Math.pow(actual - predicted, 2) / 2.0;
+        }
+        return err;
+    }
 
-		// compute error
-		double predictedClass = (output > 0.5)? 1.0 : 0.0;
-		double actualClass = inst.classValue();
-		double error = computeError(actualClass, predictedClass, "Squared");
-		// TODO : check if output instead
+    public double predictOnly(Instance inst) {
+        this.loadInputAttributes(inst);
+        double net = this.computeNet();
+        double output = computeOutput(net);
 
-		if(debugLevel <= 2)
-			{
-			System.out.println("Actual: " + actualClass + "\tOutput: " + output + " \tNet: " + net + "\tErr: " + error);
-			}
-		return predictedClass;
-		}
+        // compute error
+        double predictedClass = (output > 0.5) ? 1.0 : 0.0;
+        double actualClass = inst.classValue();
+        double error = computeError(actualClass, predictedClass, "Squared");
+        // TODO : check if output instead
 
-	/** loads instance attributes into this.inputs array */
-	private void loadInputAttributes(Instance inst)
-		{
-		int k = 1;
-		for (int attIndex = 0;attIndex < inst.numAttributes();attIndex++)
-			{
-			if(attIndex != inst.classIndex())
-				{
-				this.inputs[k] = inst.value(attIndex);
-				k++;
-				}
-			}
-		}
+        if (debugLevel <= 2) {
+            System.out.println("Actual: " + actualClass + "\tOutput: " + output + " \tNet: " + net + "\tErr: " + error);
+        }
+        return predictedClass;
+    }
 
-	/**
-	 * @return sigmoid(net)
-	 */
-	public double computeOutput(double net)
-		{
-		return sigmoid(net);
-		}
+    /**
+     * loads instance attributes into this.inputs array
+     */
+    private void loadInputAttributes(Instance inst) {
+        int k = 1;
+        for (int attIndex = 0; attIndex < inst.numAttributes(); attIndex++) {
+            if (attIndex != inst.classIndex()) {
+                this.inputs[k] = inst.value(attIndex);
+                k++;
+            }
+        }
+    }
 
-	/**
-	 * @return net = sigma(wt*input)
-	 */
-	public double computeNet()
-		{
-		double net = 0;
-		for (int i = 0;i < this.inputs.length;i++)
-			{
-			net += (this.weights[i] * this.inputs[i]);
-			}
-		return net;
-		}
+    /**
+     * @return sigmoid(net)
+     */
+    public double computeOutput(double net) {
+        return sigmoid(net);
+    }
 
-	public double sigmoid(double val)
-		{
-		return(1.0 / (1.0 + Math.exp(-1.0 * val)));
-		}
+    /**
+     * @return net = sigma(wt*input)
+     */
+    public double computeNet() {
+        double net = 0;
+        for (int i = 0; i < this.inputs.length; i++) {
+            net += (this.weights[i] * this.inputs[i]);
+        }
+        return net;
+    }
 
-	}
+    public double sigmoid(double val) {
+        return (1.0 / (1.0 + Math.exp(-1.0 * val)));
+    }
+
+
+
+    public double getLearningRate() {
+        return learningRate;
+    }
+
+    public double[] getWeights() {
+        return weights;
+    }
+
+    public double[] getInputs() {
+        return inputs;
+    }
+
+}
