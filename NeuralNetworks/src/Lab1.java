@@ -7,7 +7,7 @@ import weka.core.Instances;
 
 public class Lab1 {
 
-    static int debugLevel = 2;
+    static int debugLevel = 3;
     static LinkedList<String> predictStats;
     static HashMap<Integer, String> outputLines;
 
@@ -51,7 +51,7 @@ public class Lab1 {
             }
         }
 
-        System.out.println("Best epoch : " + bestEpoch);
+//        System.out.println("Best epoch : " + bestEpoch);
         test(testInstances, bestNode, true, true);
 
     }
