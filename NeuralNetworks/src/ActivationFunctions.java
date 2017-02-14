@@ -5,6 +5,7 @@ public class ActivationFunctions {
 
     public static String SIGMOID = "Sigmoid";
     public static String RELU = "ReLU";
+    public static String LINEAR = "Linear";
 
     /**
      * Computes the sigmoid on each member and returns a new vector with those values.
@@ -26,7 +27,7 @@ public class ActivationFunctions {
     public static double[] reluOnVector(double[] inputVector) {
         double output[] = new double[inputVector.length];
         for(int i=0;i<inputVector.length;i++) {
-            output[i]=0; // TODO
+            output[i]=Math.max(0.0, inputVector[i]); // TODO verify that this is ReLU
         }
         return output;
     }
