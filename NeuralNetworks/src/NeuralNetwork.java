@@ -15,7 +15,8 @@ public class NeuralNetwork {
 
     int debugLevel = 2;
 
-    public int numInputs, numOutputs, numHiddenLayers = 0, numLayers;
+    int numInputs;
+    int numOutputs, numHiddenLayers = 0, numLayers;
 
     ArrayList<Integer> numUnitsPerLayer;
 
@@ -36,6 +37,7 @@ public class NeuralNetwork {
         this.crossLayerWts = new LinkedList<>();
         this.activationFunctions = new LinkedList<>();
     }
+
 
     /**
      * Add more specifications if necessary, such as activation function
@@ -68,7 +70,7 @@ public class NeuralNetwork {
             this.crossLayerWts.add(crossLayerWt);
         }
 
-        if (debugLevel <= 2) {
+        if (debugLevel <= 1) {
             for (double layerWt[][] : this.crossLayerWts) {
                 System.out.println("CrossLayerWt shape : (" + layerWt.length + "," + layerWt[0].length + ")");
             }
@@ -86,7 +88,7 @@ public class NeuralNetwork {
         List<double[]> outputVectors = this.computeOutputVectorsAtEachLayer(input);
 
         if (predictOnly) {
-            return outputVectors.get(outputVectors.size()-1);
+            return outputVectors.get(outputVectors.size() - 1);
         }
 
         //Train and backprop
@@ -118,10 +120,9 @@ public class NeuralNetwork {
             throw new IllegalStateException("new cross layer wt array size != old");
         }
 
-
         //TODO verify end to end
         this.crossLayerWts = newCrossLayerWts;
-        return outputVectors.get(outputVectors.size()-1);
+        return outputVectors.get(outputVectors.size() - 1);
     }
 
 
@@ -161,7 +162,7 @@ public class NeuralNetwork {
     private List<double[]> computeErrorsAtEachLayer(double[] labelVector, List<double[]> outputVectors) {
 
         List<double[]> errors = new LinkedList<>();
-        double[] outputVector = outputVectors.get(outputVectors.size()-1);
+        double[] outputVector = outputVectors.get(outputVectors.size() - 1);
 
         // Output Layer
         errors.add(new ArrayRealVector(labelVector).subtract(new ArrayRealVector(outputVector)).toArray());
@@ -184,9 +185,9 @@ public class NeuralNetwork {
             else if (activationFunction.equalsIgnoreCase(ActivationFunctions.RELU)) {
                 error = errorContributionsByFeature;
                 double errArray[] = error.toArray();
-                for(int j=0;i<errArray.length;j++) {
-                    if(featureVector.getEntry(j) <0 ) {
-                        errArray[j]=0;
+                for (int j = 0; i < errArray.length; j++) {
+                    if (featureVector.getEntry(j) < 0) {
+                        errArray[j] = 0;
                     }
                 }
                 error = new ArrayRealVector(errArray);
@@ -202,7 +203,7 @@ public class NeuralNetwork {
     }
 
 
-    private List<double[][]> computeWeightDeltasForEachWeightMatrix(List<double[]> errors, List<double[]> outputVectors ){
+    private List<double[][]> computeWeightDeltasForEachWeightMatrix(List<double[]> errors, List<double[]> outputVectors) {
         List<double[][]> wtDeltas = new LinkedList<>();
         // Hidden and output layers
         for (int i = 1; i < this.numLayers; i++) {
@@ -235,9 +236,9 @@ public class NeuralNetwork {
 
 
     public void printWeightArrays() {
-        for(int i=1;i<numLayers;i++) {
-            System.out.println("Layer: "+(i-1)+"to Layer: "+i);
-            System.out.println(Arrays.deepToString(this.crossLayerWts.get(i-1)));
+        for (int i = 1; i < numLayers; i++) {
+            System.out.println("Layer: " + (i - 1) + " to Layer: " + i);
+            System.out.println(Arrays.deepToString(this.crossLayerWts.get(i - 1)));
         }
     }
 
