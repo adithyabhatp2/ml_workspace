@@ -1,14 +1,9 @@
-import com.sun.tools.javac.util.ArrayUtils;
-
 import java.util.*;
-
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.Scanner;
 import java.nio.file.Paths;
 import java.io.IOException;
 
-public class Lab2 {
+public class DataParser {
 
 	//Array to store test, tune and train sets
 	static List<double[]> train_set_output = new LinkedList<>();
