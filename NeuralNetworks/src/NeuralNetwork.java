@@ -82,111 +82,24 @@ public class NeuralNetwork {
             throw new IllegalArgumentException("Incorrect number of inputs, expected " + this.numInputs);
         }
 
-        double[] outputVector = input;
-
-        //// Predict
-        List<double[]> outputVectors = new LinkedList<>();
-        outputVectors.add(input); // Layer 0 - input
-        for (int i = 1; i < this.numLayers; i++) {
-
-            double[] featureVector = Arrays.copyOf(outputVector, outputVector.length + 1);
-            featureVector[featureVector.length - 1] = 1; // bias
-
-            double[][] weightArray = this.crossLayerWts.get(i - 1);
-            String activationFunction = this.activationFunctions.get(i - 1);
-
-            if (debugLevel <= 1) {
-                System.out.println("\nwt array: " + Arrays.deepToString(weightArray));
-                System.out.println("featureVector: " + Arrays.toString(featureVector));
-            }
-
-            if (debugLevel <= 2) {
-                System.out.println("\nwt array shape: " + weightArray.length + "," + weightArray[0].length);
-                System.out.println("featureVector shape: " + featureVector.length);
-            }
-
-            RealMatrix weightMatrix = MatrixUtils.createRealMatrix(weightArray);
-            double[] outputNet = weightMatrix.operate(featureVector);
-
-            // need to transform outputNet to outputVector
-            if (activationFunction.equalsIgnoreCase(ActivationFunctions.SIGMOID)) {
-                outputVector = ActivationFunctions.sigmoidOnVector(outputNet);
-            }
-            else if (activationFunction.equalsIgnoreCase(ActivationFunctions.RELU)) {
-                outputVector = ActivationFunctions.reluOnVector(outputNet);
-            }
-
-            outputVectors.add(outputVector);
-
-            if (debugLevel <= 1) {
-                System.out.println("outputVector: " + Arrays.toString(outputVector));
-            }
-            if (debugLevel <= 2) {
-                System.out.println("outputVector shape: " + outputVector.length);
-            }
-        }
+        // Predict
+        List<double[]> outputVectors = this.computeOutputVectorsAtEachLayer(input);
 
         if (predictOnly) {
-            return outputVector;
+            return outputVectors.get(outputVectors.size()-1);
         }
 
         //Train and backprop
-
         if (labelVector.length != numOutputs) {
             throw new IllegalArgumentException("Incorrect length of labelVector for output, expected " + this.numOutputs);
         }
 
 
         //// Compute Errors
-        List<double[]> errors = new LinkedList<>();
-
-        // Output Layer
-        errors.add(new ArrayRealVector(labelVector).subtract(new ArrayRealVector(outputVector)).toArray());
-        RealVector nextError = new ArrayRealVector(errors.get(0));
-        // Hidden Layers
-        for (int i = this.numLayers - 2; i >= 1; i--) {
-            RealVector featureVector = new ArrayRealVector(outputVectors.get(i)).append(1.0); // for bias input
-            RealMatrix weightMatrix = MatrixUtils.createRealMatrix(this.crossLayerWts.get(i)); // [numOutputs x numFeatures]
-            String activationFunction = this.activationFunctions.get(i - 1);
-            RealVector error = null;
-
-            RealMatrix wTranspMatrix = weightMatrix.transpose(); // each row - contributions of one feature to each of the outputs of the next layer. [numFeatures x numOutputs]
-            RealVector errorContributionsByFeature = wTranspMatrix.operate(nextError);
-
-            if (activationFunction.equalsIgnoreCase(ActivationFunctions.SIGMOID)) {
-                error = featureVector.mapMultiply(-1).mapAdd(1).ebeMultiply(featureVector); // o(-o+1)
-                error = error.ebeMultiply(errorContributionsByFeature);
-            }
-            else if (activationFunction.equalsIgnoreCase(ActivationFunctions.RELU)) {
-                error = featureVector.ebeMultiply(errorContributionsByFeature);
-                //TODO : unsure.. check if this is correct for ReLU! Perhaps multiply by 0 if negative feature value?
-            }
-
-            error = error.getSubVector(0, error.getDimension() - 1); // remove bias
-            nextError = error;
-            errors.add(0, error.toArray()); // so that finally is in same order as weights
-        }
-        errors.add(0, input); // dummy for input layer 0.
-
+        List<double[]> errors = this.computeErrorsAtEachLayer(labelVector, outputVectors);
 
         //// Compute deltas
-        List<double[][]> deltas = new LinkedList<>();
-        // Hidden and output layers
-        for (int i = 1; i < this.numLayers; i++) {
-            RealVector featureVector = new ArrayRealVector(outputVectors.get(i - 1)).append(1.0);
-            RealMatrix weightMatrix = MatrixUtils.createRealMatrix(this.crossLayerWts.get(i - 1));
-            RealVector error = new ArrayRealVector(errors.get(i));
-
-            // errors[i] x featureVectors [i] = op[i-1] - cross prod of these 2 vectors - gives us a matrix
-            RealMatrix deltaMatrix = error.outerProduct(featureVector).scalarMultiply(this.learningRate); // cross product
-            // sanity check
-            if (deltaMatrix.getColumnDimension() != weightMatrix.getColumnDimension() || deltaMatrix.getRowDimension() != weightMatrix.getRowDimension()) {
-                throw new IllegalArgumentException("mismatch between deltaMatrix and weight matrix shapes at index : " + i);
-            }
-
-            deltas.add(deltaMatrix.getData());
-        }
-
+        List<double[][]> deltas = this.computeWeightDeltasForEachWeightMatrix(errors, outputVectors);
 
         //// Compute momentums / dropout
 
@@ -208,15 +121,108 @@ public class NeuralNetwork {
 
         //TODO verify end to end
         this.crossLayerWts = newCrossLayerWts;
-        return outputVector;
+        return outputVectors.get(outputVectors.size()-1);
     }
 
 
-    /**
-     * Initialize the 2d weight array to random values
-     *
-     * @param double2dArray
-     */
+    private List<double[]> computeOutputVectorsAtEachLayer(double[] input) {
+
+        List<double[]> outputVectors = new LinkedList<>();
+        outputVectors.add(input); // Layer 0 - input
+
+        double[] outputVector = input;
+
+        for (int i = 1; i < this.numLayers; i++) {
+
+            double[] featureVector = Arrays.copyOf(outputVector, outputVector.length + 1);
+            featureVector[featureVector.length - 1] = 1; // bias
+
+            double[][] weightArray = this.crossLayerWts.get(i - 1);
+            RealMatrix weightMatrix = MatrixUtils.createRealMatrix(weightArray);
+
+            double[] outputNet = weightMatrix.operate(featureVector);
+
+            String activationFunction = this.activationFunctions.get(i - 1);
+
+            // need to transform outputNet to outputVector
+            if (activationFunction.equalsIgnoreCase(ActivationFunctions.SIGMOID)) {
+                outputVector = ActivationFunctions.sigmoidOnVector(outputNet);
+            }
+            else if (activationFunction.equalsIgnoreCase(ActivationFunctions.RELU)) {
+                outputVector = ActivationFunctions.reluOnVector(outputNet);
+            }
+
+            outputVectors.add(outputVector);
+        }
+        return outputVectors;
+    }
+
+
+    private List<double[]> computeErrorsAtEachLayer(double[] labelVector, List<double[]> outputVectors) {
+
+        List<double[]> errors = new LinkedList<>();
+        double[] outputVector = outputVectors.get(outputVectors.size()-1);
+
+        // Output Layer
+        errors.add(new ArrayRealVector(labelVector).subtract(new ArrayRealVector(outputVector)).toArray());
+        RealVector nextError = new ArrayRealVector(errors.get(0));
+
+        // Hidden Layers
+        for (int i = this.numLayers - 2; i >= 1; i--) {
+            RealVector featureVector = new ArrayRealVector(outputVectors.get(i)).append(1.0); // for bias input
+            RealMatrix weightMatrix = MatrixUtils.createRealMatrix(this.crossLayerWts.get(i)); // [numOutputs x numFeatures]
+            String activationFunction = this.activationFunctions.get(i - 1);
+            RealVector error = null;
+
+            RealMatrix wTranspMatrix = weightMatrix.transpose(); // each row - contributions of one feature to each of the outputs of the next layer. [numFeatures x numOutputs]
+            RealVector errorContributionsByFeature = wTranspMatrix.operate(nextError);
+
+            if (activationFunction.equalsIgnoreCase(ActivationFunctions.SIGMOID)) {
+                error = featureVector.mapMultiply(-1).mapAdd(1).ebeMultiply(featureVector); // o(-o+1)
+                error = error.ebeMultiply(errorContributionsByFeature);
+            }
+            else if (activationFunction.equalsIgnoreCase(ActivationFunctions.RELU)) {
+                error = errorContributionsByFeature;
+                double errArray[] = error.toArray();
+                for(int j=0;i<errArray.length;j++) {
+                    if(featureVector.getEntry(j) <0 ) {
+                        errArray[j]=0;
+                    }
+                }
+                error = new ArrayRealVector(errArray);
+                //TODO : unsure.. check if this is correct for ReLU!
+            }
+
+            error = error.getSubVector(0, error.getDimension() - 1); // remove bias
+            nextError = error;
+            errors.add(0, error.toArray()); // so that finally is in same order as weights
+        }
+        errors.add(0, null); // dummy for input layer 0.
+        return errors;
+    }
+
+
+    private List<double[][]> computeWeightDeltasForEachWeightMatrix(List<double[]> errors, List<double[]> outputVectors ){
+        List<double[][]> wtDeltas = new LinkedList<>();
+        // Hidden and output layers
+        for (int i = 1; i < this.numLayers; i++) {
+            RealVector featureVector = new ArrayRealVector(outputVectors.get(i - 1)).append(1.0);
+            RealMatrix weightMatrix = MatrixUtils.createRealMatrix(this.crossLayerWts.get(i - 1));
+            RealVector error = new ArrayRealVector(errors.get(i));
+
+            // errors[i] x featureVectors [i] = op[i-1] - cross prod of these 2 vectors - gives us a matrix
+            RealMatrix deltaMatrix = error.outerProduct(featureVector).scalarMultiply(this.learningRate); // cross product
+            // sanity check
+            if (deltaMatrix.getColumnDimension() != weightMatrix.getColumnDimension() || deltaMatrix.getRowDimension() != weightMatrix.getRowDimension()) {
+                throw new IllegalArgumentException("mismatch between deltaMatrix and weight matrix shapes at index : " + i);
+            }
+
+            wtDeltas.add(deltaMatrix.getData());
+        }
+        return wtDeltas;
+    }
+
+
     private void initializeToSmalldoubles(double[][] double2dArray) {
         Random randObj = new Random();
         for (double[] row : double2dArray) {
@@ -227,5 +233,12 @@ public class NeuralNetwork {
         }
     }
 
+
+    public void printWeightArrays() {
+        for(int i=1;i<numLayers;i++) {
+            System.out.println("Layer: "+(i-1)+"to Layer: "+i);
+            System.out.println(Arrays.deepToString(this.crossLayerWts.get(i-1)));
+        }
+    }
 
 }
