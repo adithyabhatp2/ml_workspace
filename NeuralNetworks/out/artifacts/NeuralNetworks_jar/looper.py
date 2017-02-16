@@ -25,3 +25,23 @@ elif experiment_no == 2:
 		filename = "relu_eta_" + str(eta) + ".csv"
 		cmd += " > " + filename
 		os.system(cmd)
+elif experiment_no == 3:
+	cmd_prefix = "java -jar NeuralNetworks.jar ../../../filename.txt "
+	cmd_postfix = " sigmoid 1000 0 0"
+
+	for HUs in [10, 100, 1000]:
+		print ("Number of hidden units is " + str(HUs))
+		cmd = cmd_prefix + str(HUs) + cmd_postfix
+		filename = "sigmoid_hu_" + str(HUs) + ".csv"
+		cmd += " > " + filename
+		os.system(cmd)
+elif experiment_no == 4:
+	cmd_prefix = "java -jar NeuralNetworks.jar ../../../filename.txt "
+	cmd_postfix = " relu 1000 0 0"
+
+	for HUs in [10, 100, 1000]:
+		print ("Number of hidden units is " + str(HUs))
+		cmd = cmd_prefix + str(HUs) + cmd_postfix
+		filename = "relu_hu_" + str(HUs) + ".csv"
+		cmd += " > " + filename
+		os.system(cmd)		
