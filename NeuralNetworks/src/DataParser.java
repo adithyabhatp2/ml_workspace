@@ -5,7 +5,7 @@ import java.io.IOException;
 
 public class DataParser {
 
-    static int debugLevel = 1;
+    static int debugLevel = 2;
 
     //Array to store test, tune and train sets
     static List<double[]> train_set_output = new LinkedList<>();
@@ -86,7 +86,10 @@ public class DataParser {
 		10. Apply one-hot encoding and return the final output
 	*/
 
-        System.out.println("Parsing data ....");
+	    if(debugLevel <=1) {
+            System.out.println("Parsing data ....");
+        }
+
         List<List<String>> proteins_input = new ArrayList<>();
         List<List<String>> proteins_output = new ArrayList<>();
         int newProtein = 0;

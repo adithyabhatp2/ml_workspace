@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
  */
 public class Lab2 {
 
-    static int debugLevel = 3;
+    static int debugLevel = 4;
 
     public static void main(String args[]) {
 
@@ -29,8 +29,8 @@ public class Lab2 {
             System.exit(1);
         }
 
-        System.out.println("Lab2 <fileName> <numHiddenUnits> <sigmoid/relu> <numEpochs> <learningRate> <momentumRate> <weightDecayRate>".replaceAll(" ", "\t"));
-        System.out.println(Arrays.toString(args).replaceAll(", ", "\t").replaceFirst("\\[", "").replaceFirst("\\]", ""));
+        System.out.println("Lab2 <fileName> <numHiddenUnits> <sigmoid/relu> <numEpochs> <learningRate> <momentumRate> <weightDecayRate>".replaceAll(" ", ","));
+        System.out.println(Arrays.toString(args).replaceAll(", ", ",").replaceFirst("\\[", "").replaceFirst("\\]", ""));
 
         String fileName = args[0];
         int numHiddenLayers = 1;
@@ -80,23 +80,28 @@ public class Lab2 {
             trainInputs = inputPairs.stream().map(InputPair::getInput).collect(Collectors.toList());
             trainOutputs = inputPairs.stream().map(InputPair::getOutput).collect(Collectors.toList());
 
-            train(trainInputs, trainOutputs, trainNN, false, true);
-            double acc = test(tuneInputs, tuneOutputs, trainNN, false, true, true);
-            if (acc > maxTuneAccuracy) {
+            double trainAcc = train(trainInputs, trainOutputs, trainNN, false, false);
+            double tuneAcc = test(tuneInputs, tuneOutputs, trainNN, false, false, true);
+            if (tuneAcc > maxTuneAccuracy) {
                 bestWeights = trainNN.crossLayerWts;
-                maxTuneAccuracy = acc;
+                maxTuneAccuracy = tuneAcc;
                 bestEpoch = i;
             }
-            test(testInputs, testOutputs, trainNN, false, true, false);
+            double testAcc = test(testInputs, testOutputs, trainNN, false, false, false);
+            System.out.println(i+","+trainAcc+","+tuneAcc+","+testAcc);
         }
         trainNN.crossLayerWts = bestWeights;
         if (debugLevel <= 3) {
-            System.out.println("\nBest epoch : " + bestEpoch);
+            System.out.println("\nBest epoch for early stop : " + bestEpoch);
         }
 
         // Test
-        test(testInputs, testOutputs, trainNN, false, true, false);
+        double trainAcc = test(trainInputs, trainOutputs, trainNN, false, false, true);
+        double tuneAcc = test(tuneInputs, tuneOutputs, trainNN, false, false, true);
+        double testAcc = test(testInputs, testOutputs, trainNN, false, false, false);
+        System.out.println(bestEpoch+","+trainAcc+","+tuneAcc+","+testAcc);
 
+        test(testInputs, testOutputs, trainNN, false, true, false);
         System.out.println("Done");
     }
 
