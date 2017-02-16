@@ -25,7 +25,7 @@ def Plot1Sub1(data, figName, legend, labs,x_lab):
     plt.ylabel(ylabel, fontsize=12)
     x_val = [2.3, 3.3, 4.3]
     plt.xticks(x_val,x_lab)
-    plt.title("Impact of Hidden Units, Momentum \n& Weight Decay (ReLU)", fontsize = 12)
+    plt.title("Impact of Hidden Units, Momentum \n& Weight Decay (Sigmoid)", fontsize = 12)
     plt.ylim([0, 100])
     #plt.yticks()
     plt.legend(labs,loc='best', fontsize = 12)
@@ -43,7 +43,7 @@ def Plot_exp1c():
     y12 = []
 
     for eta in [10, 100, 1000]:
-        filename = "relu_hu_" + str(eta) + ".csv"
+        filename = "sigmoid_hu_" + str(eta) + ".csv"
         fp = open(filename, "r")
         lines = fp.read().split("\n")
         lines = [line for line in lines if line != ""]
@@ -53,7 +53,7 @@ def Plot_exp1c():
         y11.append(tuning_accuracy)
 
     for eta in [10, 100, 1000]:
-        filename = "all_relu_hu_" + str(eta) + ".csv"
+        filename = "all_sigmoid_hu_" + str(eta) + ".csv"
         fp = open(filename, "r")
         lines = fp.read().split("\n")
         lines = [line for line in lines if line != ""]
@@ -70,7 +70,7 @@ def Plot_exp1c():
     labs = legend
     x_lab = x
     
-    Plot1Sub1(sub1, "reluHUs.pdf",legend,labs,x_lab)
+    Plot1Sub1(sub1, "sigmoidHUs.pdf",legend,labs,x_lab)
 
 def main():
     Plot_exp1c()
