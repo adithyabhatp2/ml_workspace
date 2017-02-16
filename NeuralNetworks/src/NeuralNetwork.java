@@ -1,7 +1,4 @@
-import org.apache.commons.math3.linear.ArrayRealVector;
-import org.apache.commons.math3.linear.MatrixUtils;
-import org.apache.commons.math3.linear.RealMatrix;
-import org.apache.commons.math3.linear.RealVector;
+import org.apache.commons.math3.linear.*;
 
 import java.util.*;
 
@@ -12,6 +9,8 @@ import java.util.*;
 public class NeuralNetwork {
 
     double learningRate = 0.1;
+    double momentumRate = 0;
+    double weightDecayRate = 0;
 
     int debugLevel = 2;
 
@@ -23,8 +22,11 @@ public class NeuralNetwork {
     List<double[][]> crossLayerWts;
     List<String> activationFunctions;
 
+    List<double[]> errors;
+    List<double[]> outputVectors;
+    List<double[][]> weightUpdates;
 
-    public NeuralNetwork(int numInputs, int numOutputs, double learningRate) {
+    public NeuralNetwork(int numInputs, int numOutputs, double learningRate, double momentumRate, double weightDecayRate) {
 
         this.numInputs = numInputs;
         this.numOutputs = numOutputs;
@@ -97,22 +99,23 @@ public class NeuralNetwork {
         }
 
 
-        //// Compute Errors
+        // Compute Errors
         List<double[]> errors = this.computeErrorsAtEachLayer(labelVector, outputVectors);
 
-        //// Compute deltas
-        List<double[][]> deltas = this.computeWeightDeltasForEachWeightMatrix(errors, outputVectors);
-
-        //// Compute momentums / dropout
+        // Compute weightUpdates from backprop, wt Decay, momentum
+        weightUpdates = this.computeWeightUpdatesForEachWeightMatrix(errors, outputVectors);
 
 
-        //// Update weights
+        // Update weights
         List<double[][]> newCrossLayerWts = new LinkedList<>();
         for (int i = 1; i < this.numLayers; i++) {
+
             RealMatrix weightMatrix = MatrixUtils.createRealMatrix(this.crossLayerWts.get(i - 1));
-            RealMatrix deltaMatrix = MatrixUtils.createRealMatrix(deltas.get(i - 1));
+
+            RealMatrix deltaMatrix = MatrixUtils.createRealMatrix(weightUpdates.get(i - 1));
 
             RealMatrix newWtMatrix = weightMatrix.add(deltaMatrix); // TODO: add momentum term, etc
+
             newCrossLayerWts.add(newWtMatrix.getData());
         }
         // sanity check
@@ -120,7 +123,6 @@ public class NeuralNetwork {
             throw new IllegalStateException("new cross layer wt array size != old");
         }
 
-        //TODO verify end to end
         this.crossLayerWts = newCrossLayerWts;
         return outputVectors.get(outputVectors.size() - 1);
     }
@@ -128,7 +130,7 @@ public class NeuralNetwork {
 
     private List<double[]> computeOutputVectorsAtEachLayer(double[] input) {
 
-        List<double[]> outputVectors = new LinkedList<>();
+        outputVectors = new LinkedList<>();
         outputVectors.add(input); // Layer 0 - input
 
         double[] outputVector = input;
@@ -161,11 +163,11 @@ public class NeuralNetwork {
 
     private List<double[]> computeErrorsAtEachLayer(double[] labelVector, List<double[]> outputVectors) {
 
-        List<double[]> errors = new LinkedList<>();
+        errors = new LinkedList<>();
         double[] outputVector = outputVectors.get(outputVectors.size() - 1);
 
         // Output Layer
-        errors.add(new ArrayRealVector(labelVector).subtract(new ArrayRealVector(outputVector)).toArray());
+        errors.add(new ArrayRealVector(labelVector).subtract(new ArrayRealVector(outputVector)).toArray()); // y-o
         RealVector nextError = new ArrayRealVector(errors.get(0));
 
         // Hidden Layers
@@ -179,19 +181,18 @@ public class NeuralNetwork {
             RealVector errorContributionsByFeature = wTranspMatrix.operate(nextError);
 
             if (activationFunction.equalsIgnoreCase(ActivationFunctions.SIGMOID)) {
-                error = featureVector.mapMultiply(-1).mapAdd(1).ebeMultiply(featureVector); // o(-o+1)
+                error = featureVector.mapMultiply(-1).mapAdd(1).ebeMultiply(featureVector); // o(1-o)(nexterror * featurevector)
                 error = error.ebeMultiply(errorContributionsByFeature);
             }
             else if (activationFunction.equalsIgnoreCase(ActivationFunctions.RELU)) {
                 error = errorContributionsByFeature;
                 double errArray[] = error.toArray();
-                for (int j = 0; i < errArray.length; j++) {
+                for (int j = 0; j < errArray.length; j++) {
                     if (featureVector.getEntry(j) < 0) {
                         errArray[j] = 0;
                     }
                 }
                 error = new ArrayRealVector(errArray);
-                //TODO : unsure.. check if this is correct for ReLU!
             }
 
             error = error.getSubVector(0, error.getDimension() - 1); // remove bias
@@ -203,24 +204,37 @@ public class NeuralNetwork {
     }
 
 
-    private List<double[][]> computeWeightDeltasForEachWeightMatrix(List<double[]> errors, List<double[]> outputVectors) {
-        List<double[][]> wtDeltas = new LinkedList<>();
+    private List<double[][]> computeWeightUpdatesForEachWeightMatrix(List<double[]> errors, List<double[]> outputVectors) {
+        List<double[][]> newWeightUpdates = new LinkedList<>();
         // Hidden and output layers
         for (int i = 1; i < this.numLayers; i++) {
+
             RealVector featureVector = new ArrayRealVector(outputVectors.get(i - 1)).append(1.0);
             RealMatrix weightMatrix = MatrixUtils.createRealMatrix(this.crossLayerWts.get(i - 1));
             RealVector error = new ArrayRealVector(errors.get(i));
 
-            // errors[i] x featureVectors [i] = op[i-1] - cross prod of these 2 vectors - gives us a matrix
+            RealMatrix oldWeightUpdateMatrix = this.weightUpdates ==null?null:new Array2DRowRealMatrix(this.weightUpdates.get(i-1));
+
+            // Backprop - errors[i] x featureVectors [i] = op[i-1] - cross prod of these 2 vectors - gives us a matrix
             RealMatrix deltaMatrix = error.outerProduct(featureVector).scalarMultiply(this.learningRate); // cross product
+
+            // weight decay
+            deltaMatrix = deltaMatrix.add(weightMatrix.scalarMultiply(learningRate*weightDecayRate));
+
+            // momentum - skip for the first instance
+            if(oldWeightUpdateMatrix!=null) {
+                deltaMatrix = deltaMatrix.add(oldWeightUpdateMatrix.scalarMultiply(momentumRate));
+            }
+
             // sanity check
             if (deltaMatrix.getColumnDimension() != weightMatrix.getColumnDimension() || deltaMatrix.getRowDimension() != weightMatrix.getRowDimension()) {
                 throw new IllegalArgumentException("mismatch between deltaMatrix and weight matrix shapes at index : " + i);
             }
 
-            wtDeltas.add(deltaMatrix.getData());
+            newWeightUpdates.add(deltaMatrix.getData());
         }
-        return wtDeltas;
+
+        return newWeightUpdates;
     }
 
 
@@ -228,7 +242,7 @@ public class NeuralNetwork {
         Random randObj = new Random();
         for (double[] row : double2dArray) {
             for (int i = 0; i < row.length; i++) {
-                row[i] = Math.random();
+                row[i] = (randObj.nextDouble()-0.5)/5.0;
                 // row[i] = 0.1; // Temp for testing
             }
         }
@@ -237,9 +251,18 @@ public class NeuralNetwork {
 
     public void printWeightArrays() {
         for (int i = 1; i < numLayers; i++) {
-            System.out.println("Layer: " + (i - 1) + " to Layer: " + i);
-            System.out.println(Arrays.deepToString(this.crossLayerWts.get(i - 1)));
+            System.out.println("Weight Matrix - Layer: " + (i - 1) + " to Layer: " + i);
+            System.out.println(Arrays.deepToString(this.crossLayerWts.get(i - 1)).replaceAll("], ", "],\n "));
         }
     }
+
+
+    public void printOutputVectors() {
+        for (int i = 1; i < numLayers; i++) {
+            System.out.println("Output Vector - Layer: " + i);
+            System.out.println(Arrays.toString(outputVectors.get(i)));
+        }
+    }
+
 
 }
