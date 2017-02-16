@@ -47,16 +47,16 @@ elif experiment_no == 4:
 		os.system(cmd)
 elif experiment_no == 5:
 	cmd_prefix = "java -jar NeuralNetworks.jar ../../../filename.txt 10 sigmoid 100 0.001 0 "
-	for lambda in [0.00001, 0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000, 10000, 100000]:
-		cmd = cmd_prefix + str(lambda)
-		filename = "sigmoid_lambda_" + str(lambda) + ".csv"
+	for lambda1 in [0.00001, 0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000, 10000, 100000]:
+		cmd = cmd_prefix + str(lambda1)
+		filename = "sigmoid_lambda_" + str(lambda1) + ".csv"
 		cmd += " > " + filename
 		os.system(cmd)	
 elif experiment_no == 6:
 	cmd_prefix = "java -jar NeuralNetworks.jar ../../../filename.txt 10 relu 100 0.01 0 "
 
-	for lambda in [0.00001, 0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000, 10000, 100000]:
-		cmd = cmd_prefix + str(lambda)
-		filename = "relu_lambda_" + str(lambda) + ".csv"
+	for lambda1 in [0.00001, 0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000, 10000, 100000]:
+		cmd = cmd_prefix + str(lambda1)
+		filename = "relu_lambda_" + str(lambda1) + ".csv"
 		cmd += " > " + filename
 		os.system(cmd)	
