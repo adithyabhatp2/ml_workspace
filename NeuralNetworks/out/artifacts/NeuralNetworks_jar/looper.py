@@ -14,6 +14,7 @@ if experiment_no == 1:
 		cmd = cmd_prefix + str(eta) + cmd_postfix
 		filename = "sigmoid_eta_" + str(eta) + ".csv"
 		cmd += " > " + filename
+		os.system(cmd)
 elif experiment_no == 2:
 	cmd_prefix = "java -jar NeuralNetworks.jar ../../../filename.txt 10 relu 100 "
 	cmd_postfix = " 0 0"
@@ -23,3 +24,4 @@ elif experiment_no == 2:
 		cmd = cmd_prefix + str(eta) + cmd_postfix
 		filename = "relu_eta_" + str(eta) + ".csv"
 		cmd += " > " + filename
+		os.system(cmd)
