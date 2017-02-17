@@ -74,9 +74,49 @@ elif experiment_no == 8:
 	cmd_prefix = "java -jar NeuralNetworks.jar ../../../filename.txt "
 	cmd_postfix = " relu 1000 0.01 0.9 0.01"
 
-	for HUs in [10, 100, 1000]:
+	for HUs in [1000]:
 		print ("Number of hidden units is " + str(HUs))
 		cmd = cmd_prefix + str(HUs) + cmd_postfix
 		filename = "all_relu_hu_" + str(HUs) + ".csv"
+		cmd += " > " + filename
+		os.system(cmd)
+elif experiment_no == 9:
+	cmd_prefix = "java -jar NeuralNetworks.jar ../../../filename.txt "
+	cmd_postfix = " relu 1000 0.01 0.9 0"
+
+	for HUs in [10]:
+		print ("Number of hidden units is " + str(HUs))
+		cmd = cmd_prefix + str(HUs) + cmd_postfix
+		filename = "momentum_relu_hu_" + str(HUs) + ".csv"
+		cmd += " > " + filename
+		os.system(cmd)
+elif experiment_no == 10:
+	cmd_prefix = "java -jar NeuralNetworks.jar ../../../filename.txt "
+	cmd_postfix = " sigmoid 1000 0.001 0.9 0"
+
+	for HUs in [10]:
+		print ("Number of hidden units is " + str(HUs))
+		cmd = cmd_prefix + str(HUs) + cmd_postfix
+		filename = "momentum_sigmoid_hu_" + str(HUs) + ".csv"
+		cmd += " > " + filename
+		os.system(cmd)	
+elif experiment_no == 11:
+	cmd_prefix = "java -jar NeuralNetworks.jar ../../../filename.txt "
+	cmd_postfix = " sigmoid 1000 0.001 0 0.1"
+
+	for HUs in [10]:
+		print ("Number of hidden units is " + str(HUs))
+		cmd = cmd_prefix + str(HUs) + cmd_postfix
+		filename = "lambda_sigmoid_hu_" + str(HUs) + ".csv"
+		cmd += " > " + filename
+		os.system(cmd)
+elif experiment_no == 12:
+	cmd_prefix = "java -jar NeuralNetworks.jar ../../../filename.txt "
+	cmd_postfix = " relu 1000 0.01 0 0.01"
+
+	for HUs in [10]:
+		print ("Number of hidden units is " + str(HUs))
+		cmd = cmd_prefix + str(HUs) + cmd_postfix
+		filename = "lambda_relu_hu_" + str(HUs) + ".csv"
 		cmd += " > " + filename
 		os.system(cmd)	

@@ -27,13 +27,14 @@ def Plot1Sub1(data, figName, legend, labs,x_lab):
     plt.yticks(fontsize=12)
     plt.title("Weight Decay Parameter (lambda) Tuning")
     ax.tick_params(axis='x', pad=7)
-    plt.legend(labs,loc='upper center')
+    plt.legend(labs,loc='best', fontsize=12)
     plt.setp(plt.gca().get_legend().get_texts(), fontsize='10')
     plt.tight_layout()
     subplots_adjust(bottom=0.2, left=0.15)
-    pp = PdfPages(figName)
-    pp.savefig()
-    pp.close()
+    plt.savefig(figName, format='png', dpi=300)
+    #pp = PdfPages(figName)
+    #pp.savefig()
+    #pp.close()
 
 def Plot_exp6():
 
@@ -46,7 +47,7 @@ def Plot_exp6():
         lines = fp.read().split("\n")
         lines = [line for line in lines if line != ""]
         tuning_accuracy = 0
-        for line in lines[2:-6]:
+        for line in lines[2:-7]:
             tuning_accuracy = float(line.split(",")[2]) * 100.0
         y11.append(tuning_accuracy)
 
@@ -56,7 +57,7 @@ def Plot_exp6():
         lines = fp.read().split("\n")
         lines = [line for line in lines if line != ""]
         tuning_accuracy = 0
-        for line in lines[2:-6]:
+        for line in lines[2:-7]:
             tuning_accuracy = float(line.split(",")[2]) * 100.0
         y12.append(tuning_accuracy)
 
@@ -70,6 +71,6 @@ def Plot_exp6():
 
     labs = legend
     x_lab = ["10e-5", "10e-4", "10e-3", "10e-2", "10e-1", "1", "10e1", "10e2", "10e3", "10e4", "10e5"]
-    Plot1Sub1(sub1, "weightDecay.pdf",legend,labs,x_lab)
+    Plot1Sub1(sub1, "weightDecay.png",legend,labs,x_lab)
 
 Plot_exp6()

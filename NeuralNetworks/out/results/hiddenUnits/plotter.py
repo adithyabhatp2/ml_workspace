@@ -19,14 +19,14 @@ def Plot1Sub1(data, figName, legend, labs,x_lab):
     bar_width = 0.35
     opacity = 0.4
     index2 = [ i+bar_width for i in index ]
-    rects1 = plt.bar(index, y1, bar_width, color = 'g', label = legend, hatch = '//')
+    rects1 = plt.bar(index, y1, bar_width, color = 'g', hatch = '//')
     rects2 = plt.bar(index2, y2, bar_width, label = legend, color='y', hatch = '\\\\')
     plt.xlabel(xlabel, fontsize=12)
     plt.ylabel(ylabel, fontsize=12)
-    x_val = [2.3, 3.3, 4.3]
+    x_val = [2.2, 3.2, 4.2]
     plt.xticks(x_val,x_lab)
-    plt.title("Impact of Hidden Units, Momentum \n& Weight Decay (Sigmoid)", fontsize = 12)
-    plt.ylim([0, 100])
+    plt.title("Impact of Hidden Units", fontsize = 12)
+    plt.ylim([0, 90])
     #plt.yticks()
     plt.legend(labs,loc='best', fontsize = 12)
     plt.tight_layout()
@@ -53,7 +53,7 @@ def Plot_exp1c():
         y11.append(tuning_accuracy)
 
     for eta in [10, 100, 1000]:
-        filename = "all_sigmoid_hu_" + str(eta) + ".csv"
+        filename = "relu_hu_" + str(eta) + ".csv"
         fp = open(filename, "r")
         lines = fp.read().split("\n")
         lines = [line for line in lines if line != ""]
@@ -66,7 +66,7 @@ def Plot_exp1c():
     xlabel = "Number of Hidden Units"
     ylabel = "Test Set Accuracy (%)"
     sub1 = (x, y11, y12, xlabel, ylabel)
-    legend = ["Without momentum and weight decay", "With momentum and weight decay"]
+    legend = ["Sigmoid", "ReLU"]
     labs = legend
     x_lab = x
     
